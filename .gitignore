@@ -11,3 +11,5 @@ build
 .idea
 .coverage
 
+.DS_Store
+.vscode
