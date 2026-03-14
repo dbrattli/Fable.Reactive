@@ -1,4 +1,5 @@
 ---
+name: Fable.Reactive
 last_commit_released: 3dc12a7a9550cf085e1d464408726d5a1e995973
 ---
 
