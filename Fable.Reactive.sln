@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsyncRx", "src\FSharp.Control.AsyncRx.fsproj", "{8D83B5B9-A2E2-45F4-8B8E-B4A65CFF4CC9}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsyncRx", "src\Fable.Reactive.fsproj", "{8D83B5B9-A2E2-45F4-8B8E-B4A65CFF4CC9}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "test\Tests.fsproj", "{B384F8B3-C04F-4F47-8DB0-B1E9B6339B5C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extra", "extra", "{885AA678-F4C1-4E40-B23D-15D7C7A3CAC1}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsyncSeq", "extra\AsyncSeq\FSharp.Control.AsyncRx.AsyncSeq.fsproj", "{AF52BA89-C96B-4D1C-A7AA-B652727E8852}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AsyncSeq", "extra\AsyncSeq\Fable.Reactive.AsyncSeq.fsproj", "{AF52BA89-C96B-4D1C-A7AA-B652727E8852}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

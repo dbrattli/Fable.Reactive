@@ -1,50 +1,69 @@
 namespace FSharp.Control
 
 open System.Collections.Generic
-open System.Threading
+open Fable.Actor
 
 open FSharp.Control.Core
 
 module internal Subjects =
-    /// A cold stream that only supports a single subscriber
+    type private SingleSubjectMsg<'TSource> =
+        | Notify of Notification<'TSource>
+        | Subscribe of IAsyncObserver<'TSource>
+
+    /// A cold stream that only supports a single subscriber.
+    /// Notifications arriving before subscription are buffered and replayed.
     let singleSubject<'TSource> () : IAsyncObserver<'TSource> * IAsyncObservable<'TSource> =
-        let mutable oobv: IAsyncObserver<'TSource> option = None
-        let cts = new CancellationTokenSource()
+        let actor =
+            spawn (fun inbox ->
+                let rec waitForSubscriber (buffer: Notification<'TSource> list) =
+                    async {
+                        let! msg = inbox.Receive()
+
+                        match msg with
+                        | Notify n -> return! waitForSubscriber (buffer @ [ n ])
+                        | Subscribe obv ->
+                            // Replay buffered notifications
+                            for n in buffer do
+                                do! deliverNotification obv n
+
+                            return! forwarding obv
+                    }
+
+                and forwarding (obv: IAsyncObserver<'TSource>) =
+                    async {
+                        let! msg = inbox.Receive()
+
+                        match msg with
+                        | Notify n ->
+                            do! deliverNotification obv n
+                            return! forwarding obv
+                        | Subscribe _ -> failwith "singleSubject: Already subscribed"
+                    }
+
+                and deliverNotification (obv: IAsyncObserver<'TSource>) (n: Notification<'TSource>) =
+                    async {
+                        match n with
+                        | OnNext x ->
+                            try
+                                do! obv.OnNextAsync x
+                            with ex ->
+                                do! obv.OnErrorAsync ex
+                        | OnError e -> do! obv.OnErrorAsync e
+                        | OnCompleted -> do! obv.OnCompletedAsync()
+                    }
+
+                waitForSubscriber [])
 
         let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IAsyncRxDisposable> =
             let sobv = safeObserver aobv AsyncDisposable.Empty
-
-            if Option.isSome oobv then
-                failwith "singleStream: Already subscribed"
-
-            oobv <- Some sobv
-            cts.Cancel()
+            actor.Post(Subscribe sobv)
 
             async {
-                let cancel () = async { oobv <- None }
+                let cancel () = async { () }
                 return AsyncDisposable.Create cancel
             }
 
-        let obv (n: Notification<'TSource>) =
-            async {
-                while oobv.IsNone do
-                    // Wait for subscriber
-                    Async.StartImmediate(Async.Sleep 100, cts.Token)
-
-                match oobv with
-                | Some obv ->
-                    match n with
-                    | OnNext x ->
-                        try
-                            do! obv.OnNextAsync x
-                        with ex ->
-                            do! obv.OnErrorAsync ex
-                    | OnError e -> do! obv.OnErrorAsync e
-                    | OnCompleted -> do! obv.OnCompletedAsync()
-                | None ->
-                    printfn "No observer for %A" n
-                    ()
-            }
+        let obv (n: Notification<'TSource>) = async { actor.Post(Notify n) }
 
         let obs =
             { new IAsyncObservable<'TSource> with
@@ -53,40 +72,32 @@ module internal Subjects =
         AsyncObserver obv :> IAsyncObserver<'TSource>, obs
 
     /// A mailbox subject is a subscribable mailbox. Each message is broadcasted to all subscribed observers.
-    let mbSubject<'TSource> () : MailboxProcessor<Notification<'TSource>> * IAsyncObservable<'TSource> =
+    let mbSubject<'TSource> () : Actor<Notification<'TSource>> * IAsyncObservable<'TSource> =
         let obvs = new List<IAsyncObserver<'TSource>>()
-        let cts = new CancellationTokenSource()
 
         let mb =
-            MailboxProcessor.Start(
-                fun inbox ->
-                    let rec messageLoop _ =
-                        async {
-                            let! n = inbox.Receive()
+            spawn (fun inbox ->
+                let rec messageLoop () =
+                    async {
+                        let! n = inbox.Receive()
 
-                            match n with
-                            | OnNext x ->
-                                for aobv in obvs do
-                                    do! aobv.OnNextAsync x
+                        match n with
+                        | OnNext x ->
+                            for aobv in obvs do
+                                do! aobv.OnNextAsync x
 
-                            | OnError err ->
-                                for aobv in obvs do
-                                    do! aobv.OnErrorAsync err
+                        | OnError err ->
+                            for aobv in obvs do
+                                do! aobv.OnErrorAsync err
 
-                                cts.Cancel()
+                        | OnCompleted ->
+                            for aobv in obvs do
+                                do! aobv.OnCompletedAsync()
 
-                            | OnCompleted ->
-                                for aobv in obvs do
-                                    do! aobv.OnCompletedAsync()
+                        return! messageLoop ()
+                    }
 
-                                cts.Cancel()
-
-                            return! messageLoop ()
-                        }
-
-                    messageLoop ()
-                , cts.Token
-            )
+                messageLoop ())
 
         let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IAsyncRxDisposable> =
             async {
@@ -104,12 +115,12 @@ module internal Subjects =
     /// A stream is both an observable sequence as well as an observer.
     /// Each notification is broadcasted to all subscribed observers.
     let subject<'TSource> () : IAsyncObserver<'TSource> * IAsyncObservable<'TSource> =
-        let mb, obs = mbSubject<'TSource> ()
+        let actor, obs = mbSubject<'TSource> ()
 
         let obv =
             { new IAsyncObserver<'TSource> with
-                member this.OnNextAsync x = async { OnNext x |> mb.Post }
-                member this.OnErrorAsync err = async { OnError err |> mb.Post }
-                member this.OnCompletedAsync() = async { OnCompleted |> mb.Post } }
+                member this.OnNextAsync x = async { OnNext x |> actor.Post }
+                member this.OnErrorAsync err = async { OnError err |> actor.Post }
+                member this.OnCompletedAsync() = async { OnCompleted |> actor.Post } }
 
         obv, obs

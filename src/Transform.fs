@@ -1,6 +1,7 @@
 namespace FSharp.Control
 
 open System
+open Fable.Actor
 open FSharp.Control.Core
 
 [<RequireQualifiedAccess>]
@@ -84,50 +85,62 @@ module internal Transform =
             let safeObv, autoDetach = autoDetachObserver aobv
 
             let innerAgent =
-                let obv (mb: MailboxProcessor<InnerSubscriptionCmd<'TSource>>) (id: int) =
+                let mutable agentRef: Actor<InnerSubscriptionCmd<'TSource>> option = None
+
+                let obv (id: int) =
                     { new IAsyncObserver<'TSource> with
                         member _.OnNextAsync x = safeObv.OnNextAsync x
                         member _.OnErrorAsync err = safeObv.OnErrorAsync err
-                        member _.OnCompletedAsync() = async { mb.Post(InnerCompleted id) } }
 
-                MailboxProcessor.Start(fun inbox ->
-                    let rec messageLoop (current: IAsyncRxDisposable option, isStopped, currentId) =
-                        async {
-                            let! cmd = inbox.Receive()
+                        member _.OnCompletedAsync() =
+                            async {
+                                match agentRef with
+                                | Some a -> a.Post(InnerCompleted id)
+                                | None -> ()
+                            } }
 
-                            let! current', isStopped', currentId' =
-                                async {
-                                    match cmd with
-                                    | InnerObservable xs ->
-                                        let nextId = currentId + 1
+                let agent =
+                    spawn (fun inbox ->
+                        let rec messageLoop (current: IAsyncRxDisposable option, isStopped, currentId) =
+                            async {
+                                let! cmd = inbox.Receive()
 
-                                        if current.IsSome then
-                                            do! current.Value.DisposeAsync()
+                                let! current', isStopped', currentId' =
+                                    async {
+                                        match cmd with
+                                        | InnerObservable xs ->
+                                            let nextId = currentId + 1
 
-                                        let! inner = xs.SubscribeAsync(obv inbox nextId)
-                                        return Some inner, isStopped, nextId
-                                    | InnerCompleted idx ->
-                                        if isStopped && idx = currentId then
-                                            do! safeObv.OnCompletedAsync()
+                                            if current.IsSome then
+                                                do! current.Value.DisposeAsync()
+
+                                            let! inner = xs.SubscribeAsync(obv nextId)
+                                            return Some inner, isStopped, nextId
+                                        | InnerCompleted idx ->
+                                            if isStopped && idx = currentId then
+                                                do! safeObv.OnCompletedAsync()
+                                                return (None, true, currentId)
+                                            else
+                                                return (current, isStopped, currentId)
+                                        | Completed ->
+                                            if current.IsNone then
+                                                do! safeObv.OnCompletedAsync()
+
+                                            return (current, true, currentId)
+                                        | Dispose ->
+                                            if current.IsSome then
+                                                do! current.Value.DisposeAsync()
+
                                             return (None, true, currentId)
-                                        else
-                                            return (current, isStopped, currentId)
-                                    | Completed ->
-                                        if current.IsNone then
-                                            do! safeObv.OnCompletedAsync()
+                                    }
 
-                                        return (current, true, currentId)
-                                    | Dispose ->
-                                        if current.IsSome then
-                                            do! current.Value.DisposeAsync()
+                                return! messageLoop (current', isStopped', currentId')
+                            }
 
-                                        return (None, true, currentId)
-                                }
+                        messageLoop (None, false, 0))
 
-                            return! messageLoop (current', isStopped', currentId')
-                        }
-
-                    messageLoop (None, false, 0))
+                agentRef <- Some agent
+                agent
 
             async {
                 let obv (ns: Notification<IAsyncObservable<'TSource>>) =
@@ -196,7 +209,7 @@ module internal Transform =
 
                 do! action source
 
-                return AsyncDisposable.Create disposable.DisposeAsync
+                return AsyncDisposable.Create(fun () -> disposable.DisposeAsync())
             }
 
         { new IAsyncObservable<'TSource> with
@@ -225,7 +238,7 @@ module internal Transform =
         let dispatch, stream = Subjects.subject<'TSource> ()
 
         let mb =
-            MailboxProcessor.Start(fun inbox ->
+            spawn (fun inbox ->
                 let rec messageLoop (count: int) (subscription: IAsyncRxDisposable) =
                     async {
                         let! cmd = inbox.Receive()

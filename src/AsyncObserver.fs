@@ -1,6 +1,7 @@
 namespace FSharp.Control
 
 open System
+open Fable.Actor
 open FSharp.Control.Core
 
 type AsyncObserver<'T>(fn: Notification<'T> -> Async<unit>) =
@@ -45,7 +46,7 @@ module AsyncObserver =
     /// (OnNext* (OnError|OnCompleted)?) is not violated.
     let safeObserver (obv: IAsyncObserver<'TSource>) (disposable: IAsyncRxDisposable) : IAsyncObserver<'TSource> =
         let agent =
-            MailboxProcessor.Start(fun inbox ->
+            spawn (fun inbox ->
                 let rec messageLoop stopped =
                     async {
                         let! n = inbox.Receive()
@@ -91,28 +92,26 @@ module AsyncObserver =
         (obv: IAsyncObserver<'TSource>)
         : IAsyncObserver<'TSource> * (Async<IAsyncRxDisposable> -> Async<IAsyncRxDisposable>) =
         let agent =
-            MailboxProcessor.Start(
-                (fun inbox ->
-                    let rec messageLoop disposables =
-                        async {
-                            let! cmd = inbox.Receive()
+            spawn (fun inbox ->
+                let rec messageLoop disposables =
+                    async {
+                        let! cmd = inbox.Receive()
 
-                            let! disposables' =
-                                async {
-                                    match cmd with
-                                    | Disposable disp -> return disp :: disposables
-                                    | Dispose ->
-                                        for disp in disposables do
-                                            do! disp.DisposeAsync()
+                        let! disposables' =
+                            async {
+                                match cmd with
+                                | Disposable disp -> return disp :: disposables
+                                | Dispose ->
+                                    for disp in disposables do
+                                        do! disp.DisposeAsync()
 
-                                        return []
-                                }
+                                    return []
+                            }
 
-                            return! messageLoop disposables'
-                        }
+                        return! messageLoop disposables'
+                    }
 
-                    messageLoop [])
-            )
+                messageLoop [])
 
         let cancel () = async { agent.Post Dispose }
         let safeObv = AsyncDisposable.Create cancel |> safeObserver obv

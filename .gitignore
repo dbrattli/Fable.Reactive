@@ -7,7 +7,9 @@ test/obj
 extra/AsyncSeq/bin
 extra/AsyncSeq/obj
 build
-/.vs/FSharp.Control.AsyncRx
+/.vs/Fable.Reactive
 .idea
 .coverage
 
+.DS_Store
+.vscode

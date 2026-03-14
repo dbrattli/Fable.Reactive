@@ -1,6 +1,6 @@
 namespace FSharp.Control
 
-open System.Threading
+open Fable.Actor
 
 [<RequireQualifiedAccess>]
 module internal Aggregation =
@@ -97,68 +97,60 @@ module internal Aggregation =
         (source: IAsyncObservable<'TSource>)
         : IAsyncObservable<IAsyncObservable<'TSource>> =
         let subscribeAsync (aobv: IAsyncObserver<IAsyncObservable<'TSource>>) =
-            let cts = new CancellationTokenSource()
-
             let agent =
-                MailboxProcessor.Start(
-                    (fun inbox ->
-                        let rec messageLoop ((groups, disposed): Map<'TKey, IAsyncObserver<'TSource>> * bool) =
-                            async {
-                                let! n = inbox.Receive()
+                spawn (fun inbox ->
+                    let rec messageLoop ((groups, disposed): Map<'TKey, IAsyncObserver<'TSource>> * bool) =
+                        async {
+                            let! n = inbox.Receive()
 
-                                if disposed then
-                                    return! messageLoop (Map.empty, true)
+                            if disposed then
+                                return! messageLoop (Map.empty, true)
 
-                                let! newGroups, disposed =
-                                    async {
-                                        match n with
-                                        | OnNext x ->
-                                            let groupKey = keyMapper x
+                            let! newGroups, disposed =
+                                async {
+                                    match n with
+                                    | OnNext x ->
+                                        let groupKey = keyMapper x
 
-                                            let! newGroups =
-                                                async {
-                                                    match groups.TryFind groupKey with
-                                                    | Some group ->
-                                                        do! group.OnNextAsync x
-                                                        return groups, false
-                                                    | None ->
-                                                        let obv, obs = Subjects.singleSubject ()
-                                                        do! aobv.OnNextAsync obs
-                                                        do! obv.OnNextAsync x
-                                                        return groups.Add(groupKey, obv), false
-                                                }
+                                        let! newGroups =
+                                            async {
+                                                match groups.TryFind groupKey with
+                                                | Some group ->
+                                                    do! group.OnNextAsync x
+                                                    return groups, false
+                                                | None ->
+                                                    let obv, obs = Subjects.singleSubject ()
+                                                    do! aobv.OnNextAsync obs
+                                                    do! obv.OnNextAsync x
+                                                    return groups.Add(groupKey, obv), false
+                                            }
 
-                                            return newGroups
-                                        | OnError ex ->
-                                            for entry in groups do
-                                                do! entry.Value.OnErrorAsync ex
+                                        return newGroups
+                                    | OnError ex ->
+                                        for entry in groups do
+                                            do! entry.Value.OnErrorAsync ex
 
-                                            do! aobv.OnErrorAsync ex
-                                            return Map.empty, true
-                                        | OnCompleted ->
-                                            for entry in groups do
-                                                do! entry.Value.OnCompletedAsync()
+                                        do! aobv.OnErrorAsync ex
+                                        return Map.empty, true
+                                    | OnCompleted ->
+                                        for entry in groups do
+                                            do! entry.Value.OnCompletedAsync()
 
-                                            do! aobv.OnCompletedAsync()
-                                            return Map.empty, true
-                                    }
+                                        do! aobv.OnCompletedAsync()
+                                        return Map.empty, true
+                                }
 
-                                return! messageLoop (newGroups, disposed)
-                            }
+                            return! messageLoop (newGroups, disposed)
+                        }
 
-                        messageLoop (Map.empty, false)),
-                    cts.Token
-                )
+                    messageLoop (Map.empty, false))
 
             async {
                 let obv (n: Notification<'TSource>) = async { agent.Post n }
                 let! subscription = AsyncObserver obv |> source.SubscribeAsync
 
                 let cancel () =
-                    async {
-                        cts.Cancel()
-                        do! subscription.DisposeAsync()
-                    }
+                    async { do! subscription.DisposeAsync() }
 
                 return AsyncDisposable.Create cancel
             }

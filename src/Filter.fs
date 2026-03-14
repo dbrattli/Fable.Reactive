@@ -1,6 +1,7 @@
 namespace FSharp.Control
 
 open System.Collections.Generic
+open Fable.Actor
 open FSharp.Control.Core
 
 [<RequireQualifiedAccess>]
@@ -49,7 +50,7 @@ module internal Filter =
             let safeObv, autoDetach = autoDetachObserver aobv
 
             let agent =
-                MailboxProcessor.Start(fun inbox ->
+                spawn (fun inbox ->
                     let rec messageLoop (latest: Notification<'TSource>) =
                         async {
                             let! n = inbox.Receive()
