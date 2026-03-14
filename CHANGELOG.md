@@ -1,11 +1,19 @@
 ---
-last_commit_released: 0d90cbe3bed8e14aec100733a1325bae3e1daafc
+last_commit_released: 8278b84003bcb0129afcfb0ff15f3c35ce0dadbe
 name: Fable.Reactive
 ---
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## 1.0.0-rc.5 - 2026-03-14
+
+### 🐞 Bug Fixes
+
+* Strip package name prefix from version in publish workflow ([8278b84](https://github.com/dbrattli/Fable.Reactive/commit/8278b84003bcb0129afcfb0ff15f3c35ce0dadbe))
+
+<strong><small>[View changes on Github](https://github.com/dbrattli/Fable.Reactive/compare/0d90cbe3bed8e14aec100733a1325bae3e1daafc..8278b84003bcb0129afcfb0ff15f3c35ce0dadbe)</small></strong>
 
 ## 1.0.0-rc.4 - 2026-03-14
 
