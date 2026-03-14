@@ -1,10 +1,9 @@
 # Fable.Reactive
 
-![Build and Test](https://github.com/dbrattli/AsyncRx/workflows/Build%20and%20Test/badge.svg)
-[![codecov](https://codecov.io/gh/dbrattli/AsyncRx/branch/main/graph/badge.svg)](https://codecov.io/gh/dbrattli/AsyncRx)
+![Build and Test](https://github.com/dbrattli/Fable.Reactive/workflows/Build%20and%20Test/badge.svg)
 [![Nuget](https://img.shields.io/nuget/vpre/Fable.Reactive)](https://www.nuget.org/packages/Fable.Reactive/)
 
-> Fable.Reactive is a lightweight Async Reactive (AsyncRx) library for F#.
+> Fable.Reactive is a lightweight Async Reactive library for F#.
 
 Fable.Reactive is a library for asynchronous reactive
 programming, and is the implementation of Async Observables
@@ -35,20 +34,18 @@ your open statements:
 + open Fable.Reactive
 ```
 
-All sub-namespaces have been renamed accordingly:
+All sub-namespaces and modules have been renamed accordingly:
 
 | Old | New |
 |-----|-----|
 | `FSharp.Control` | `Fable.Reactive` |
 | `FSharp.Control.Core` | `Fable.Reactive.Core` |
-| `FSharp.Control.AsyncRx` | `Fable.Reactive.AsyncRx` |
-| `FSharp.Control.Subjects` | `Fable.Reactive.Subjects` |
-
-The API itself remains unchanged.
+| `AsyncRx` module | `Reactive` module |
+| `IAsyncRxDisposable` | `IReactiveDisposable` |
 
 ## Documentation
 
-Please check out the [documentation](https://fablereaction.readthedocs.io/en/latest/asyncrx/index.html)
+Documentation is currently being updated.
 
 ## Install
 

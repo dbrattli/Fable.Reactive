@@ -38,12 +38,12 @@ type QueryBuilder() =
 [<AutoOpen>]
 module QueryBuilder =
     /// Query builder for an async reactive event source
-    let asyncRx = QueryBuilder()
+    let reactive = QueryBuilder()
 
     /// We extend AsyncBuilder to use `use!` for resource managemnt when using async builder.
     type AsyncBuilder with
 
-        member builder.Using(resource: #IAsyncRxDisposable, f: #IAsyncRxDisposable -> Async<'TSource>) =
+        member builder.Using(resource: #IReactiveDisposable, f: #IReactiveDisposable -> Async<'TSource>) =
             let mutable x = 0
 
             let disposeFunction _ =

@@ -12,7 +12,7 @@ let tests = testList "Query Tests" [
 
     testAsync "test empty query" {
         // Arrange
-        let xs = asyncRx {
+        let xs = reactive {
             ()
         }
         let obv = TestObserver<unit>()
@@ -36,9 +36,9 @@ let tests = testList "Query Tests" [
         // Arrange
         let obv = TestObserver<int>()
 
-        let xs = asyncRx {
-            let! a = seq [1; 2] |> AsyncRx.ofSeq
-            let! b = seq [3; 4] |> AsyncRx.ofSeq
+        let xs = reactive {
+            let! a = seq [1; 2] |> Reactive.ofSeq
+            let! b = seq [3; 4] |> Reactive.ofSeq
 
             yield a + b
         }
@@ -57,8 +57,8 @@ let tests = testList "Query Tests" [
         // Arrange
         let obv = TestObserver<int>()
 
-        let xs = asyncRx {
-            yield! AsyncRx.single 42
+        let xs = reactive {
+            yield! Reactive.single 42
         }
 
         // Act
@@ -75,7 +75,7 @@ let tests = testList "Query Tests" [
         // Arrange
         let obv = TestObserver<int>()
 
-        let xs = asyncRx {
+        let xs = reactive {
             yield 42
         }
 
@@ -93,7 +93,7 @@ let tests = testList "Query Tests" [
         // Arrange
         let obv = TestObserver<int>()
 
-        let xs = asyncRx {
+        let xs = reactive {
             yield 42
             yield 43
         }
@@ -112,8 +112,8 @@ let tests = testList "Query Tests" [
         // Arrange
         let obv = TestObserver<int>()
 
-        let xs = asyncRx {
-            let xs = AsyncRx.ofSeq [1; 2; 3]
+        let xs = reactive {
+            let xs = Reactive.ofSeq [1; 2; 3]
             for x in xs do
                 yield x * 10
         }
@@ -132,7 +132,7 @@ let tests = testList "Query Tests" [
         // Arrange
         let obv = TestObserver<int>()
 
-        let xs = asyncRx {
+        let xs = reactive {
             for x in [1; 2; 3] do
                 yield x * 10
         }
@@ -151,7 +151,7 @@ let tests = testList "Query Tests" [
         // Arrange
         let obv = TestObserver<int>()
 
-        let xs = asyncRx {
+        let xs = reactive {
             let! b = async { return 42 }
             yield b + 2
         }
@@ -168,7 +168,7 @@ let tests = testList "Query Tests" [
 
     testAsync "test query async dispose with use!" {
         // Arrange
-        let xs = AsyncRx.timer 10
+        let xs = Reactive.timer 10
         let obv = TestObserver<int> ()
 
         // Act

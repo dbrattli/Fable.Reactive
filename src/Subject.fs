@@ -54,7 +54,7 @@ module internal Subjects =
 
                 waitForSubscriber [])
 
-        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IReactiveDisposable> =
             let sobv = safeObserver aobv AsyncDisposable.Empty
             actor.Post(Subscribe sobv)
 
@@ -99,7 +99,7 @@ module internal Subjects =
 
                 messageLoop ())
 
-        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IReactiveDisposable> =
             async {
                 let sobv = safeObserver aobv AsyncDisposable.Empty
                 obvs.Add sobv

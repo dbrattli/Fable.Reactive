@@ -24,7 +24,7 @@ module AsyncObservable =
         member this.Run(obv: IAsyncObserver<'TSource>) = this.RunAsync obv |> Async.Start'
 
         /// Subscribes the async observer function (`Notification{'a} -> Async{unit}`) to the AsyncObservable
-        member this.SubscribeAsync<'TSource>(obv: Notification<'TSource> -> Async<unit>) : Async<IAsyncRxDisposable> =
+        member this.SubscribeAsync<'TSource>(obv: Notification<'TSource> -> Async<unit>) : Async<IReactiveDisposable> =
             this.SubscribeAsync(AsyncObserver obv)
 
     /// Returns an observable sequence that contains the elements of the given sequences concatenated together.
@@ -50,7 +50,8 @@ module Observable =
 
 /// A single module that contains all the operators. Nicer and shorter way than writing AsyncObservable. We want to
 /// prefix our operators so we don't mix e.g. `map` with other modules.
-module AsyncRx =
+[<RequireQualifiedAccess>]
+module Reactive =
 
     // Aggregate Region
 
@@ -135,7 +136,7 @@ module AsyncRx =
 
     /// Creates an async observable (`AsyncObservable{'a}`) from the
     /// given subscribe function.
-    let create (subscribe: IAsyncObserver<'a> -> Async<IAsyncRxDisposable>) : IAsyncObservable<'a> =
+    let create (subscribe: IAsyncObserver<'a> -> Async<IReactiveDisposable>) : IAsyncObservable<'a> =
         Create.create subscribe
 
     // Returns an observable sequence that invokes the specified factory

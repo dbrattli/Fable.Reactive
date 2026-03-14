@@ -7,7 +7,7 @@ module internal Combine =
     type Key = int
 
     type Model<'a> =
-        { Subscriptions: Map<Key, IAsyncRxDisposable>
+        { Subscriptions: Map<Key, IReactiveDisposable>
           Queue: IAsyncObservable<'a> list
           IsStopped: bool
           Key: Key }

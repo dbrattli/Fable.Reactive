@@ -42,7 +42,7 @@ Example test pattern:
 
 ```fsharp
 testAsync "Test name" {
-    let xs = AsyncRx.single 42 |> AsyncRx.map (fun x -> x * 10)
+    let xs = Reactive.single 42 |> Reactive.map (fun x -> x * 10)
     let obv = TestObserver<int>()
     let! sub = xs.SubscribeAsync obv
     let! latest = obv.Await()
@@ -54,7 +54,7 @@ testAsync "Test name" {
 
 ### Core Types (`src/Types.fs`)
 
-- `IAsyncRxDisposable` - Async disposable (Fable-compatible name)
+- `IReactiveDisposable` - Async disposable for subscriptions
 - `IAsyncObserver<'T>` - Async observer with OnNextAsync/OnErrorAsync/OnCompletedAsync
 - `IAsyncObservable<'T>` - Async observable with SubscribeAsync
 - `Notification<'T>` - OnNext/OnError/OnCompleted discriminated union
@@ -71,8 +71,8 @@ testAsync "Test name" {
 | Aggregate.fs       | `scan`, `reduce`, `groupBy`, `min`, `max`                                                         |
 | Timeshift.fs       | `delay`, `debounce`, `sample`                                                                     |
 | Subject.fs         | Hot/cold stream subjects for multicast                                                            |
-| AsyncObservable.fs | Main API module exporting all operators via `AsyncRx`                                             |
-| Builder.fs         | Query/computation expression builder (`asyncRx { }`)                                              |
+| AsyncObservable.fs | Main API module exporting all operators via `Reactive`                                            |
+| Builder.fs         | Query/computation expression builder (`reactive { }`)                                             |
 
 ### Key Patterns
 

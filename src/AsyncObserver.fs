@@ -44,7 +44,7 @@ module AsyncObserver =
 
     /// Safe observer that wraps the given observer. Makes sure that invocations are serialized and that the Rx grammar
     /// (OnNext* (OnError|OnCompleted)?) is not violated.
-    let safeObserver (obv: IAsyncObserver<'TSource>) (disposable: IAsyncRxDisposable) : IAsyncObserver<'TSource> =
+    let safeObserver (obv: IAsyncObserver<'TSource>) (disposable: IReactiveDisposable) : IAsyncObserver<'TSource> =
         let agent =
             spawn (fun inbox ->
                 let rec messageLoop stopped =
@@ -85,12 +85,12 @@ module AsyncObserver =
             member this.OnCompletedAsync() = async { OnCompleted |> agent.Post } }
 
     type private Msg =
-        | Disposable of IAsyncRxDisposable
+        | Disposable of IReactiveDisposable
         | Dispose
 
     let autoDetachObserver
         (obv: IAsyncObserver<'TSource>)
-        : IAsyncObserver<'TSource> * (Async<IAsyncRxDisposable> -> Async<IAsyncRxDisposable>) =
+        : IAsyncObserver<'TSource> * (Async<IReactiveDisposable> -> Async<IReactiveDisposable>) =
         let agent =
             spawn (fun inbox ->
                 let rec messageLoop disposables =
@@ -117,7 +117,7 @@ module AsyncObserver =
         let safeObv = AsyncDisposable.Create cancel |> safeObserver obv
 
         // Auto-detaches (disposes) the disposable when the observer completes with success or error.
-        let autoDetach (disposable: Async<IAsyncRxDisposable>) =
+        let autoDetach (disposable: Async<IReactiveDisposable>) =
             async {
                 let! disp = disposable
                 agent.Post(Disposable disp)

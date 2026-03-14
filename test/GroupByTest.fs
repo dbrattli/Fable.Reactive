@@ -11,9 +11,9 @@ let tests = testList "GroupBy Tests" [
 
     testAsync "Test groupby empty" {
         // Arrange
-        let xs = AsyncRx.empty<int> ()
-                |> AsyncRx.groupBy (fun _ -> 42)
-                |> AsyncRx.flatMap id
+        let xs = Reactive.empty<int> ()
+                |> Reactive.groupBy (fun _ -> 42)
+                |> Reactive.flatMap id
         let obv = TestObserver<int>()
 
         // Act
@@ -34,9 +34,9 @@ let tests = testList "GroupBy Tests" [
     testAsync "Test groupby error" {
         // Arrange
         let error = MyError "error"
-        let xs = AsyncRx.fail<int> error
-                |> AsyncRx.groupBy (fun _ -> 42)
-                |> AsyncRx.flatMap id
+        let xs = Reactive.fail<int> error
+                |> Reactive.groupBy (fun _ -> 42)
+                |> Reactive.flatMap id
         let obv = TestObserver<int>()
 
         // Act
@@ -56,9 +56,9 @@ let tests = testList "GroupBy Tests" [
 
     testAsync "Test groupby 2 groups" {
         // Arrange
-        let xs = AsyncRx.ofSeq [1; 2; 3; 4; 5; 6]
-                |> AsyncRx.groupBy (fun x -> x % 2)
-                |> AsyncRx.flatMap (fun x -> x |> AsyncRx.min)
+        let xs = Reactive.ofSeq [1; 2; 3; 4; 5; 6]
+                |> Reactive.groupBy (fun x -> x % 2)
+                |> Reactive.flatMap (fun x -> x |> Reactive.min)
         let obv = TestObserver<int> ()
 
         // Act
@@ -81,9 +81,9 @@ let tests = testList "GroupBy Tests" [
 
     testAsync "Test groupby cancel" {
         // Arrange
-        let xs = AsyncRx.ofSeq [1; 2; 3; 4; 5; 6]
-                |> AsyncRx.groupBy (fun x -> x % 2)
-                |> AsyncRx.flatMap id
+        let xs = Reactive.ofSeq [1; 2; 3; 4; 5; 6]
+                |> Reactive.groupBy (fun x -> x % 2)
+                |> Reactive.flatMap id
         let obv = TestObserver<int> ()
 
         // Act

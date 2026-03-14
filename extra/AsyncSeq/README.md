@@ -2,8 +2,8 @@ Extension for converting to and from AsyncSeq.
 
 Adds to functions:
 
-- `AsyncRx.ofAsyncSeq`
-- `AsyncRx.toAsyncSeq`
+- `Reactive.ofAsyncSeq`
+- `Reactive.toAsyncSeq`
 
 ## Install
 

@@ -17,7 +17,7 @@ let tests = testList "Filter Tests" [
                 return x < 3
             }
 
-        let xs = seq { 1..5 } |> AsyncRx.ofSeq |> AsyncRx.filterAsync predicate
+        let xs = seq { 1..5 } |> Reactive.ofSeq |> Reactive.filterAsync predicate
         let obv = TestObserver<int>()
 
         // Act
@@ -37,7 +37,7 @@ let tests = testList "Filter Tests" [
         // Arrange
         let predicate x = x < 3
 
-        let xs = seq { 1..5 } |> AsyncRx.ofSeq |> AsyncRx.filter predicate
+        let xs = seq { 1..5 } |> Reactive.ofSeq |> Reactive.filter predicate
         let obv = TestObserver<int>()
 
         // Act
@@ -61,7 +61,7 @@ let tests = testList "Filter Tests" [
                 return true
             }
 
-        let xs = seq { 1..5 } |> AsyncRx.ofSeq |> AsyncRx.filterAsync predicate
+        let xs = seq { 1..5 } |> Reactive.ofSeq |> Reactive.filterAsync predicate
         let obv = TestObserver<int>()
 
         // Act

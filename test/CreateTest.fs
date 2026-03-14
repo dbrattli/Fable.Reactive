@@ -12,7 +12,7 @@ let tests = testList "Create Tests" [
 
     testAsync "Test single happy" {
         // Arrange
-        let xs = AsyncRx.single 42
+        let xs = Reactive.single 42
         let obv = TestObserver<int> ()
 
         // Act
@@ -30,7 +30,7 @@ let tests = testList "Create Tests" [
 
     testAsync "Test just dispose after subscribe" {
         // Arrange
-        let xs = AsyncRx.single 42
+        let xs = Reactive.single 42
         let obv = TestObserver<int> ()
 
         // Act
@@ -45,7 +45,7 @@ let tests = testList "Create Tests" [
 
     testAsync "Test ofSeq empty"  {
         // Arrange
-        let xs = AsyncRx.ofSeq Seq.empty
+        let xs = Reactive.ofSeq Seq.empty
         let obv = TestObserver<int> ()
 
         // Act
@@ -62,7 +62,7 @@ let tests = testList "Create Tests" [
 
     testAsync "Test ofSeq non empty" {
         // Arrange
-        let xs = seq { 1 .. 5 } |> AsyncRx.ofSeq
+        let xs = seq { 1 .. 5 } |> Reactive.ofSeq
         let obv = TestObserver<int> ()
 
         // Act
@@ -78,7 +78,7 @@ let tests = testList "Create Tests" [
 
     testAsync "Test dispose after subscribe" {
         // Arrange
-        let xs = AsyncRx.timer 10
+        let xs = Reactive.timer 10
         let obv = TestObserver<int> ()
 
         // Act

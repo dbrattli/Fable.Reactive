@@ -15,7 +15,7 @@ module internal Create =
 
     /// Creates an async observable (`AsyncObservable{'TSource}`) from the
     /// given subscribe function.
-    let create (subscribe: IAsyncObserver<'TSource> -> Async<IAsyncRxDisposable>) : IAsyncObservable<'TSource> =
+    let create (subscribe: IAsyncObserver<'TSource> -> Async<IReactiveDisposable>) : IAsyncObservable<'TSource> =
         { new IAsyncObservable<'TSource> with
             member _.SubscribeAsync o = subscribe o }
 
@@ -23,7 +23,7 @@ module internal Create =
     let ofAsyncWorker
         (worker: IAsyncObserver<'TSource> -> CancellationToken -> Async<unit>)
         : IAsyncObservable<'TSource> =
-        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IReactiveDisposable> =
             let disposable, token = canceller ()
             let safeObv = safeObserver aobv disposable
 
@@ -49,7 +49,7 @@ module internal Create =
 
     /// Returns an observable sequence containing the single specified element.
     let single (value: 'TSource) =
-        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IReactiveDisposable> =
             let safeObv = safeObserver aobv AsyncDisposable.Empty
 
             async {
@@ -63,7 +63,7 @@ module internal Create =
 
     /// Returns an observable sequence with no elements.
     let inline empty<'TSource> () : IAsyncObservable<'TSource> =
-        let subscribeAsync (aobv: IAsyncObserver<_>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<_>) : Async<IReactiveDisposable> =
             async {
                 do! aobv.OnCompletedAsync()
                 return AsyncDisposable.Empty
@@ -74,7 +74,7 @@ module internal Create =
 
     /// Returns an empty observable sequence that never completes.
     let inline never<'TSource> () : IAsyncObservable<'TSource> =
-        let subscribeAsync (_: IAsyncObserver<_>) : Async<IAsyncRxDisposable> = async { return AsyncDisposable.Empty }
+        let subscribeAsync (_: IAsyncObserver<_>) : Async<IReactiveDisposable> = async { return AsyncDisposable.Empty }
 
         { new IAsyncObservable<'TSource> with
             member _.SubscribeAsync o = subscribeAsync o }
@@ -100,7 +100,7 @@ module internal Create =
 
     // Returns an observable sequence that invokes the specified factory function whenever a new observer subscribes.
     let defer (factory: unit -> IAsyncObservable<'TSource>) : IAsyncObservable<'TSource> =
-        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IReactiveDisposable> =
             async {
                 let result =
                     try
@@ -117,7 +117,7 @@ module internal Create =
     /// Returns an observable sequence that triggers the increasing sequence starting with 0 after the given msecs, and
     /// the after each period.
     let interval (msecs: int) (period: int) : IAsyncObservable<int> =
-        let subscribeAsync (aobv: IAsyncObserver<int>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<int>) : Async<IReactiveDisposable> =
             let cancel, token = canceller ()
 
             async {

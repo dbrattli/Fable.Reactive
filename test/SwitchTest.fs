@@ -1,8 +1,7 @@
 module Tests.Switch
 
 open System.Threading.Tasks
-open Fable.Reactive.AsyncRx
-open Fable.Reactive.AsyncRx.Streams
+open Fable.Reactive
 
 open NUnit.Framework
 open FsUnit
@@ -18,7 +17,7 @@ let ``Test switch2``() = toTask <| async {
     let obvA, a = stream<int> ()
     let obvB, b = stream<int> ()
     let obvX, xs = stream<IAsyncObservable<int>> ()
-    let ys = xs |> AsyncRx.flatMapLatest (fun x -> x)
+    let ys = xs |> Reactive.flatMapLatest (fun x -> x)
 
     let obv = TestObserver<int>()
 

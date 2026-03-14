@@ -9,7 +9,7 @@ open Fable.Reactive.Core
 type AsyncDisposable private (cancel) =
     let mutable isDisposed = 0
 
-    interface IAsyncRxDisposable with
+    interface IReactiveDisposable with
         member this.DisposeAsync() =
             async {
 #if FABLE_COMPILER
@@ -22,21 +22,21 @@ type AsyncDisposable private (cancel) =
 #endif
             }
 
-    static member Create cancel : IAsyncRxDisposable =
-        AsyncDisposable cancel :> IAsyncRxDisposable
+    static member Create cancel : IReactiveDisposable =
+        AsyncDisposable cancel :> IReactiveDisposable
 
-    static member Empty: IAsyncRxDisposable =
+    static member Empty: IReactiveDisposable =
         let cancel () = async { return () }
-        AsyncDisposable cancel :> IAsyncRxDisposable
+        AsyncDisposable cancel :> IReactiveDisposable
 
-    static member Composite(disposables: IAsyncRxDisposable seq) : IAsyncRxDisposable =
+    static member Composite(disposables: IReactiveDisposable seq) : IReactiveDisposable =
         let cancel () =
             async {
                 for d in disposables do
                     do! d.DisposeAsync()
             }
 
-        AsyncDisposable cancel :> IAsyncRxDisposable
+        AsyncDisposable cancel :> IReactiveDisposable
 
 type Disposable(cancel) =
     let mutable isDisposed = 0
@@ -68,7 +68,7 @@ type Disposable(cancel) =
 
 [<AutoOpen>]
 module AsyncDisposable =
-    type IAsyncRxDisposable with
+    type IReactiveDisposable with
 
         member this.ToDisposable() =
             { new IDisposable with
@@ -76,7 +76,7 @@ module AsyncDisposable =
 
     type System.IDisposable with
 
-        member this.ToAsyncDisposable() : IAsyncRxDisposable =
+        member this.ToAsyncDisposable() : IReactiveDisposable =
             AsyncDisposable.Create(fun () -> async { this.Dispose() })
 
     let canceller () =
