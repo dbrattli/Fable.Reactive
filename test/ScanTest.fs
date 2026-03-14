@@ -17,7 +17,7 @@ let tests = testList "Query Tests" [
                 return acc + x
             }
 
-        let xs = AsyncRx.ofSeq <| seq { 1..5 } |> AsyncRx.scanInitAsync 0 scanner
+        let xs = Reactive.ofSeq <| seq { 1..5 } |> Reactive.scanInitAsync 0 scanner
         let obv = TestObserver<int>()
 
         // Act
@@ -36,7 +36,7 @@ let tests = testList "Query Tests" [
         let scanner acc x =
             acc + x
 
-        let xs = AsyncRx.ofSeq <| seq { 1..5 } |> AsyncRx.scanInit 0 scanner
+        let xs = Reactive.ofSeq <| seq { 1..5 } |> Reactive.scanInit 0 scanner
         let obv = TestObserver<int>()
 
         // Act
@@ -57,7 +57,7 @@ let tests = testList "Query Tests" [
             raise error
             0
 
-        let xs = AsyncRx.ofSeq <| seq { 1..5 } |> AsyncRx.scanInit 0 scanner
+        let xs = Reactive.ofSeq <| seq { 1..5 } |> Reactive.scanInit 0 scanner
         let obv = TestObserver<int>()
 
         // Act

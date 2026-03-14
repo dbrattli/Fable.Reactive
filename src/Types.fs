@@ -1,17 +1,17 @@
 namespace Fable.Reactive
 
-/// FSharp version of IAsyncDisposable. We use a different name to avoid name conflicts.
-type IAsyncRxDisposable =
+/// Async disposable interface for Fable.Reactive subscriptions.
+type IReactiveDisposable =
     abstract member DisposeAsync: unit -> Async<unit>
 
-/// FSharp version of IAsyncRxDisposable
+/// Async observer with OnNextAsync/OnErrorAsync/OnCompletedAsync.
 type IAsyncObserver<'T> =
     abstract member OnNextAsync: 'T -> Async<unit>
     abstract member OnErrorAsync: exn -> Async<unit>
     abstract member OnCompletedAsync: unit -> Async<unit>
 
 type IAsyncObservable<'T> =
-    abstract member SubscribeAsync: IAsyncObserver<'T> -> Async<IAsyncRxDisposable>
+    abstract member SubscribeAsync: IAsyncObserver<'T> -> Async<IReactiveDisposable>
 
 type Notification<'T> =
     | OnNext of 'T

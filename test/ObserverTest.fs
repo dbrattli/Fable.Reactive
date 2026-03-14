@@ -5,7 +5,7 @@ open Fable.Reactive.Core
 
 open Expecto
 open Tests.Utils
-open Fable.Reactive.AsyncRx
+open Fable.Reactive
 open System.Threading
 
 exception MyError of string
@@ -52,7 +52,7 @@ let tests = testList "Observer Tests" [
 
     testAsync "Test safe observer happy" {
         // Arrange
-        let xs = AsyncRx.ofSeq [ 1..3]
+        let xs = Reactive.ofSeq [ 1..3]
         let obv = TestObserver<int>()
         let safeObv = safeObserver obv AsyncDisposable.Empty
 
@@ -148,7 +148,7 @@ let tests = testList "Observer Tests" [
         let obv = TestObserver<int>()
         let mutable disposed = false
 
-        let subscribeAsync (aobv : IAsyncObserver<int>) : Async<IAsyncRxDisposable> = async {
+        let subscribeAsync (aobv : IAsyncObserver<int>) : Async<IReactiveDisposable> = async {
             let worker = async {
                 for x in [1..5] do
                     do! aobv.OnNextAsync x
@@ -160,7 +160,7 @@ let tests = testList "Observer Tests" [
             return AsyncDisposable.Create cancel
         }
         let source = { new IAsyncObservable<int> with member __.SubscribeAsync o = subscribeAsync o }
-        let xs = source |> AsyncRx.take 4
+        let xs = source |> Reactive.take 4
 
         // Act
         let! dispose = xs.SubscribeAsync obv

@@ -17,7 +17,7 @@ let toTask computation : Task = Async.StartAsTask computation :> _
 let tests = testList "Async Seq Tests" [
 
     testAsync "Test to async seq" {
-        let xs = seq { 1..5 } |> AsyncRx.ofSeq  |> AsyncRx.toAsyncSeq
+        let xs = seq { 1..5 } |> Reactive.ofSeq  |> Reactive.toAsyncSeq
         let result = List<int> ()
 
         let each x = async {
@@ -35,7 +35,7 @@ let tests = testList "Async Seq Tests" [
     }
 
     testAsync "Test seq to async seq to async observerable to async seq" {
-        let xs = seq { 1..5 } |> AsyncSeq.ofSeq |> AsyncRx.ofAsyncSeq |> AsyncRx.toAsyncSeq
+        let xs = seq { 1..5 } |> AsyncSeq.ofSeq |> Reactive.ofAsyncSeq |> Reactive.toAsyncSeq
         let result = List<int> ()
 
         let each x = async {

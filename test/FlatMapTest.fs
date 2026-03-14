@@ -10,8 +10,8 @@ let tests = testList "Filter Tests" [
 
     testAsync "Test flatMap empty" {
         // Arrange
-        let xs = AsyncRx.empty ()
-        let zs = xs |> AsyncRx.flatMap (fun x -> x)
+        let xs = Reactive.empty ()
+        let zs = xs |> Reactive.flatMap (fun x -> x)
         let obv = TestObserver<int>()
 
         // Act
@@ -31,7 +31,7 @@ let tests = testList "Filter Tests" [
     testAsync "Test flatMap some" {
         // Arrange
         let xs = fromNotification [ OnNext 1; OnNext 2; OnNext 3; OnCompleted]
-        let zs = xs |> AsyncRx.flatMap (fun x -> AsyncRx.single x)
+        let zs = xs |> Reactive.flatMap (fun x -> Reactive.single x)
         let obv = TestObserver<int>()
 
         // Act
@@ -49,8 +49,8 @@ let tests = testList "Filter Tests" [
     testAsync "Test flatMap monad law left identity" {
 
         // Arrange
-        let f x = AsyncRx.single (x * 10)
-        let xs = AsyncRx.single 42 |> AsyncRx.flatMap f
+        let f x = Reactive.single (x * 10)
+        let xs = Reactive.single 42 |> Reactive.flatMap f
         let ys = f 42
         let obv1 = TestObserver<int>()
         let obv2 = TestObserver<int>()
@@ -71,8 +71,8 @@ let tests = testList "Filter Tests" [
     testAsync "Test flatMap monad law right identity" {
 
         // Arrange
-        let m = AsyncRx.single 42
-        let xs = m |> AsyncRx.flatMap AsyncRx.single
+        let m = Reactive.single 42
+        let xs = m |> Reactive.flatMap Reactive.single
         let obv1 = TestObserver<int>()
         let obv2 = TestObserver<int>()
 
@@ -91,12 +91,12 @@ let tests = testList "Filter Tests" [
     /// (m >>= f) >>= g is just like doing m >>= (\x -> f x >>= g)
     testAsync "Test flatMap monad law associativity" {
         // Arrange
-        let m = AsyncRx.single 42
-        let f x = AsyncRx.single (x * 1000)
-        let g x = AsyncRx.single (x * 42)
+        let m = Reactive.single 42
+        let f x = Reactive.single (x * 1000)
+        let g x = Reactive.single (x * 42)
 
-        let xs = m |> AsyncRx.flatMap f |> AsyncRx.flatMap g
-        let ys = m |> AsyncRx.flatMap (fun x -> f x |> AsyncRx.flatMap g)
+        let xs = m |> Reactive.flatMap f |> Reactive.flatMap g
+        let ys = m |> Reactive.flatMap (fun x -> f x |> Reactive.flatMap g)
 
         let obv1 = TestObserver<int>()
         let obv2 = TestObserver<int>()
@@ -116,7 +116,7 @@ let tests = testList "Filter Tests" [
     testAsync "Test flatMap expression some" {
         // Arrange
         let xs = fromNotification [ OnNext 1; OnNext 2; OnNext 3; OnCompleted]
-        let ys = asyncRx {
+        let ys = reactive {
             let! x = xs
             yield x * 2
         }
@@ -136,7 +136,7 @@ let tests = testList "Filter Tests" [
     testAsync "Test flatMap expression some for" {
         // Arrange
         let xs = fromNotification [ OnNext 1; OnNext 2; OnNext 3; OnCompleted]
-        let ys = asyncRx {
+        let ys = reactive {
             for x in xs do
                 yield x * 2
         }
@@ -156,9 +156,9 @@ let tests = testList "Filter Tests" [
     testAsync "Test flatMap expression some return bang" {
         // Arrange
         let xs = fromNotification [ OnNext 1; OnNext 2; OnNext 3; OnCompleted]
-        let ys = asyncRx {
+        let ys = reactive {
             let! x = xs
-            yield! AsyncRx.single (x * 2)
+            yield! Reactive.single (x * 2)
         }
         let obv = TestObserver<int>()
 

@@ -12,7 +12,7 @@ let tests = testList "Subject Tests" [
 
     testAsync "Test subject broadcasts completeness to all observers" {
         // Arrange
-        let (dispatch, stream) = AsyncRx.subject ()
+        let (dispatch, stream) = Reactive.subject ()
         let obv1 = TestObserver<int>()
         let obv2 = TestObserver<int>()
 
@@ -34,7 +34,7 @@ let tests = testList "Subject Tests" [
 
     testAsync "Test subject broadcasts error to all observers" {
         // Arrange
-        let (dispatch, stream) = AsyncRx.subject ()
+        let (dispatch, stream) = Reactive.subject ()
         let obv1 = TestObserver<int>()
         let obv2 = TestObserver<int>()
 
@@ -60,7 +60,7 @@ let tests = testList "Subject Tests" [
 
     testAsync "Test subject does not broadcast error when first observer is throws" {
         // Arrange
-        let (dispatch, stream) = AsyncRx.subject ()
+        let (dispatch, stream) = Reactive.subject ()
         let obv1 = TestObserver<int>()
         let obv2 = TestObserver<int>()
 
@@ -88,7 +88,7 @@ let tests = testList "Subject Tests" [
 
     testAsync "Test subject does not broadcast error when second observer is throws" {
         // Arrange
-        let (dispatch, stream) = AsyncRx.subject ()
+        let (dispatch, stream) = Reactive.subject ()
         let obv1 = TestObserver<int>()
         let obv2 = TestObserver<int>()
 

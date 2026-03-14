@@ -5,10 +5,10 @@ open FSharp.Control
 open Fable.Reactive
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module AsyncRx =
+module Reactive =
     /// Convert async sequence into an async observable.
     let ofAsyncSeq (xs: AsyncSeq<'TSource>) : IAsyncObservable<'TSource> =
-        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<'TSource>) : Async<IReactiveDisposable> =
             let cancel, token = canceller ()
 
             async {

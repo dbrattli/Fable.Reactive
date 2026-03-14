@@ -12,7 +12,7 @@ module internal Transform =
         (nextAsync: ('TResult -> Async<unit>) -> 'TSource -> Async<unit>)
         (source: IAsyncObservable<'TSource>)
         : IAsyncObservable<'TResult> =
-        let subscribeAsync (aobv: IAsyncObserver<'TResult>) : Async<IAsyncRxDisposable> =
+        let subscribeAsync (aobv: IAsyncObserver<'TResult>) : Async<IReactiveDisposable> =
             { new IAsyncObserver<'TSource> with
                 member _.OnNextAsync x = nextAsync aobv.OnNextAsync x
                 member _.OnErrorAsync err = aobv.OnErrorAsync err
@@ -101,7 +101,7 @@ module internal Transform =
 
                 let agent =
                     spawn (fun inbox ->
-                        let rec messageLoop (current: IAsyncRxDisposable option, isStopped, currentId) =
+                        let rec messageLoop (current: IReactiveDisposable option, isStopped, currentId) =
                             async {
                                 let! cmd = inbox.Receive()
 
@@ -239,7 +239,7 @@ module internal Transform =
 
         let mb =
             spawn (fun inbox ->
-                let rec messageLoop (count: int) (subscription: IAsyncRxDisposable) =
+                let rec messageLoop (count: int) (subscription: IReactiveDisposable) =
                     async {
                         let! cmd = inbox.Receive()
 
@@ -282,7 +282,7 @@ module internal Transform =
             member _.SubscribeAsync o = subscribeAsync o }
 
     let toObservable (source: IAsyncObservable<'TSource>) : IObservable<'TSource> =
-        let mutable subscription: IAsyncRxDisposable = AsyncDisposable.Empty
+        let mutable subscription: IReactiveDisposable = AsyncDisposable.Empty
 
         { new IObservable<'TSource> with
             member _.Subscribe obv =

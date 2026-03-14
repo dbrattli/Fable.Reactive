@@ -14,9 +14,9 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test merge non empty emtpy" {
         // Arrange
-        let xs = seq { 1..5 } |> AsyncRx.ofSeq
-        let ys = AsyncRx.empty<int> ()
-        let zs = AsyncRx.ofSeq [ xs; ys ] |> AsyncRx.mergeInner
+        let xs = seq { 1..5 } |> Reactive.ofSeq
+        let ys = Reactive.empty<int> ()
+        let zs = Reactive.ofSeq [ xs; ys ] |> Reactive.mergeInner
         let obv = TestObserver<int>()
 
         // Act
@@ -33,9 +33,9 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test merge empty non emtpy" {
         // Arrange
-        let xs = AsyncRx.empty<int> ()
-        let ys = seq { 1..5 } |> AsyncRx.ofSeq
-        let zs = AsyncRx.ofSeq [ xs; ys ] |> AsyncRx.mergeInner
+        let xs = Reactive.empty<int> ()
+        let ys = seq { 1..5 } |> Reactive.ofSeq
+        let zs = Reactive.ofSeq [ xs; ys ] |> Reactive.mergeInner
         let obv = TestObserver<int>()
 
         // Act
@@ -53,9 +53,9 @@ let tests = testList "Merge Tests" [
     testAsync "Test merge error error" {
         // Arrange
         let error = MyError "error"
-        let xs = AsyncRx.fail error
-        let ys = AsyncRx.fail error
-        let zs = AsyncRx.ofSeq [ xs; ys ] |> AsyncRx.mergeInner
+        let xs = Reactive.fail error
+        let ys = Reactive.fail error
+        let zs = Reactive.ofSeq [ xs; ys ] |> Reactive.mergeInner
         let obv = TestObserver<int> ()
 
         // Act
@@ -75,9 +75,9 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test merge two" {
         // Arrange
-        let xs  = seq { 1..3 } |> AsyncRx.ofSeq
-        let ys = seq { 4..5 } |> AsyncRx.ofSeq
-        let zs = AsyncRx.ofSeq [ xs; ys ] |> AsyncRx.mergeInner
+        let xs  = seq { 1..3 } |> Reactive.ofSeq
+        let ys = seq { 4..5 } |> Reactive.ofSeq
+        let zs = Reactive.ofSeq [ xs; ys ] |> Reactive.mergeInner
         let obv = TestObserver<int> ()
 
         // Act
@@ -97,9 +97,9 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test subscribe immediately" {
          // Arrange
-         let obv, stream = AsyncRx.singleSubject<int> ()
+         let obv, stream = Reactive.singleSubject<int> ()
          let msgs =
-            Create.ofSeq [stream;  AsyncRx.empty () ] |> AsyncRx.mergeInner
+            Create.ofSeq [stream;  Reactive.empty () ] |> Reactive.mergeInner
 
          let testObv = TestObserver<int>()
 

@@ -15,7 +15,7 @@ let tests = testList "TakeUntil Tests" [
         // Arrange
         let obvX, xs = subject<int> ()
         let obvY, ys = subject<bool> ()
-        let zs = xs |> AsyncRx.takeUntil ys
+        let zs = xs |> Reactive.takeUntil ys
 
         let obv = TestObserver<int>()
 

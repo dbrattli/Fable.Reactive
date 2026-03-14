@@ -14,9 +14,9 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test concat emtpy empty" {
         // Arrange
-        let xs = AsyncRx.empty ()
-        let ys = AsyncRx.empty ()
-        let zs = AsyncRx.concatSeq [ xs; ys ]
+        let xs = Reactive.empty ()
+        let ys = Reactive.empty ()
+        let zs = Reactive.concatSeq [ xs; ys ]
         let obv = TestObserver<int>()
 
         // Act
@@ -35,9 +35,9 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test concat non emtpy empty" {
         // Arrange
-        let xs = seq { 1..3 } |> AsyncRx.ofSeq
-        let ys = AsyncRx.empty ()
-        let zs = AsyncRx.concatSeq [ xs; ys ]
+        let xs = seq { 1..3 } |> Reactive.ofSeq
+        let ys = Reactive.empty ()
+        let zs = Reactive.concatSeq [ xs; ys ]
         let obv = TestObserver<int>()
 
         // Act
@@ -54,9 +54,9 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test concat empty non empty" {
         // Arrange
-        let xs = AsyncRx.empty ()
-        let ys = seq { 1..3 } |> AsyncRx.ofSeq
-        let zs = AsyncRx.concatSeq [ xs; ys ]
+        let xs = Reactive.empty ()
+        let ys = seq { 1..3 } |> Reactive.ofSeq
+        let zs = Reactive.concatSeq [ xs; ys ]
         let obv = TestObserver<int>()
 
         // Act
@@ -73,9 +73,9 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test concat two" {
         // Arrange
-        let xs = seq { 1..3 } |> AsyncRx.ofSeq
-        let ys = seq { 4..6 } |> AsyncRx.ofSeq
-        let zs = AsyncRx.concatSeq [ xs; ys ]
+        let xs = seq { 1..3 } |> Reactive.ofSeq
+        let ys = seq { 4..6 } |> Reactive.ofSeq
+        let zs = Reactive.concatSeq [ xs; ys ]
         let obv = TestObserver<int> ()
 
         // Act
@@ -92,8 +92,8 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test concat ++" {
         // Arrange
-        let xs = seq { 1..3 } |> AsyncRx.ofSeq
-        let ys = seq { 4..6 } |> AsyncRx.ofSeq
+        let xs = seq { 1..3 } |> Reactive.ofSeq
+        let ys = seq { 4..6 } |> Reactive.ofSeq
         let zs = xs ++ ys
         let obv = TestObserver<int>()
 
@@ -111,10 +111,10 @@ let tests = testList "Merge Tests" [
 
     testAsync "Test concat three" {
         // Arrange
-        let a = seq { 1..2 } |> AsyncRx.ofSeq
-        let b = seq { 3..4 } |> AsyncRx.ofSeq
-        let c = seq { 5..6 } |> AsyncRx.ofSeq
-        let xs = AsyncRx.concatSeq [ a; b; c ]
+        let a = seq { 1..2 } |> Reactive.ofSeq
+        let b = seq { 3..4 } |> Reactive.ofSeq
+        let c = seq { 5..6 } |> Reactive.ofSeq
+        let xs = Reactive.concatSeq [ a; b; c ]
         let obv = TestObserver<int>()
 
         // Act
@@ -132,9 +132,9 @@ let tests = testList "Merge Tests" [
     testAsync "Test concat fail with non emtpy" {
         // Arrange
         let error = MyError "error"
-        let xs = AsyncRx.fail error
-        let ys = seq { 1..3 } |> AsyncRx.ofSeq
-        let zs = AsyncRx.concatSeq [ xs; ys ]
+        let xs = Reactive.fail error
+        let ys = seq { 1..3 } |> Reactive.ofSeq
+        let zs = Reactive.concatSeq [ xs; ys ]
         let obv = TestObserver<int>()
 
         // Act

@@ -12,7 +12,7 @@ let tests =
         [ testAsync "Test delay values are delayed" {
               // Arrange
               let xs = fromNotification [ OnNext 1; OnNext 2; OnCompleted ]
-              let delayed = xs |> AsyncRx.delay 50
+              let delayed = xs |> Reactive.delay 50
               let obv = TestObserver<int>()
 
               // Act
@@ -28,7 +28,7 @@ let tests =
           testAsync "Test delay can resubscribe after dispose" {
               // Arrange - each subscription should get its own CTS
               let xs = fromNotification [ OnNext 1; OnCompleted ]
-              let delayed = xs |> AsyncRx.delay 50
+              let delayed = xs |> Reactive.delay 50
 
               // Act - first subscription
               let obv1 = TestObserver<int>()
@@ -49,8 +49,8 @@ let tests =
 
           testAsync "Test debounce emits last value after timeout" {
               // Arrange
-              let dispatch, source = AsyncRx.subject<int> ()
-              let debounced = source |> AsyncRx.debounce 50
+              let dispatch, source = Reactive.subject<int> ()
+              let debounced = source |> Reactive.debounce 50
               let obv = TestObserver<int>()
 
               // Act
@@ -68,8 +68,8 @@ let tests =
 
           testAsync "Test debounce dispose cancels pending timers" {
               // Arrange
-              let dispatch, source = AsyncRx.subject<int> ()
-              let debounced = source |> AsyncRx.debounce 200
+              let dispatch, source = Reactive.subject<int> ()
+              let debounced = source |> Reactive.debounce 200
               let obv = TestObserver<int>()
 
               // Act

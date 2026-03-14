@@ -2,7 +2,7 @@ module Tests.CallCC
 
 open System.Threading.Tasks
 
-open Reaction.AsyncRx
+open Fable.Reactive
 
 open NUnit.Framework
 open FsUnit
@@ -23,7 +23,7 @@ let ``Test callCC``() = toTask <| async {
         else
             abort (OnNext -1)
 
-    let xs = asyncRx {
+    let xs = reactive {
         let! x = single 5
 
         yield! callCC (fun abort ->

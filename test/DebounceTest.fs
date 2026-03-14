@@ -15,8 +15,8 @@ let toTask computation : Task = Async.StartAsTask computation :> _
 let ``Test debounce single value``() = toTask <| async {
     // Arrange
 
-    let dispatch, obs = AsyncRx.stream ()
-    let xs = obs |> AsyncRx.debounce 100
+    let dispatch, obs = Reactive.stream ()
+    let xs = obs |> Reactive.debounce 100
     let obv = TestObserver<int> ()
     let ctx = TestSynchronizationContext ()
     let mutable latest = -1
@@ -53,8 +53,8 @@ let ``Test debounce single value``() = toTask <| async {
 let ``Test debounce two immediate values``() = toTask <| async {
     // Arrange
 
-    let dispatch, obs = AsyncRx.stream ()
-    let xs = obs |> AsyncRx.debounce 100
+    let dispatch, obs = Reactive.stream ()
+    let xs = obs |> Reactive.debounce 100
     let obv = TestObserver<int>()
     let ctx = TestSynchronizationContext ()
     let mutable latest = -1
@@ -84,8 +84,8 @@ let ``Test debounce two immediate values``() = toTask <| async {
 [<Test>]
 let ``Test debounce two separate values``() = toTask <| async {
     // Arrange
-    let dispatch, obs = AsyncRx.stream ()
-    let xs = obs |> AsyncRx.debounce 100
+    let dispatch, obs = Reactive.stream ()
+    let xs = obs |> Reactive.debounce 100
     let obv = TestObserver<int>()
     let ctx = TestSynchronizationContext ()
     let mutable latest = -1

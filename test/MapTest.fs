@@ -18,8 +18,8 @@ let tests = testList "Map Tests" [
             }
 
         let xs =
-            AsyncRx.single 42
-            |> AsyncRx.mapAsync mapper
+            Reactive.single 42
+            |> Reactive.mapAsync mapper
         let obv = TestObserver<int>()
 
         // Act
@@ -39,7 +39,7 @@ let tests = testList "Map Tests" [
         let mapper x =
             x * 10
 
-        let xs = AsyncRx.single 42 |> AsyncRx.map mapper
+        let xs = Reactive.single 42 |> Reactive.map mapper
         let obv = TestObserver<int>()
 
         // Act
@@ -62,7 +62,7 @@ let tests = testList "Map Tests" [
                 raise error
             }
 
-        let xs = AsyncRx.single "error" |> AsyncRx.mapAsync mapper
+        let xs = Reactive.single "error" |> Reactive.mapAsync mapper
         let obv = TestObserver<unit>()
 
         // Act

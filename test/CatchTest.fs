@@ -19,7 +19,7 @@ let tests =
               // Arrange
               let xs = fromNotification [ OnNext 1; OnNext 2; OnNext 3; OnCompleted ]
               let ys = fromNotification [ OnNext 4; OnNext 5; OnNext 6; OnCompleted ]
-              let zs = xs |> AsyncRx.catch (fun _ -> ys)
+              let zs = xs |> Reactive.catch (fun _ -> ys)
               let obv = TestObserver<int>()
 
               // Act
@@ -38,7 +38,7 @@ let tests =
               let error = MyError "error"
               let xs = fromNotification [ OnNext 1; OnNext 2; OnNext 3; OnError error ]
               let ys = fromNotification [ OnNext 4; OnNext 5; OnNext 6; OnCompleted ]
-              let zs = xs |> AsyncRx.catch (fun _ -> ys)
+              let zs = xs |> Reactive.catch (fun _ -> ys)
               let obv = TestObserver<int>()
 
               // Act
@@ -61,13 +61,13 @@ let tests =
 
               let zs =
                   xs
-                  |> AsyncRx.catch (fun err ->
+                  |> Reactive.catch (fun err ->
                       let msg =
                           match err with
                           | MyError msg -> msg
                           | _ -> "error"
 
-                      AsyncRx.single msg)
+                      Reactive.single msg)
 
               let obv = TestObserver<string>()
 
@@ -95,7 +95,7 @@ let tests =
 
               let zs =
                   xs
-                  |> AsyncRx.catch (fun _ ->
+                  |> Reactive.catch (fun _ ->
                       iter.MoveNext() |> ignore
                       iter.Current)
 
@@ -115,8 +115,8 @@ let tests =
               // Arrange
               let error = MyError "error"
               let xs = fromNotification [ OnNext 1; OnError error ]
-              let dispatch, fallback = AsyncRx.subject<int> ()
-              let zs = xs |> AsyncRx.catch (fun _ -> fallback)
+              let dispatch, fallback = Reactive.subject<int> ()
+              let zs = xs |> Reactive.catch (fun _ -> fallback)
               let obv = TestObserver<int>()
 
               // Act
