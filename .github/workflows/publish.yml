@@ -1,41 +1,53 @@
+name: Publish NuGet
+
 on:
   push:
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+    branches: [main]
 
-name: Publish Release
+permissions:
+  contents: write
+
 jobs:
-  build:
-    name: Create Release
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: "startsWith(github.event.head_commit.message, 'chore: release ')"
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: 10.0.x
-        dotnet-quality: preview
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.x
 
-    - name: Setup paket
-      run: dotnet tool restore
-    - name: Dotnet Pack
-      run: dotnet pack -c release -p:PackageVersion=${GITHUB_REF##*/v}
+      - name: Install just
+        uses: extractions/setup-just@v3
 
-    - name: Push Nuget
-      run: dotnet nuget push src/bin/Release/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
-      continue-on-error: false
-    - name: Push AsyncSeq Nuget
-      run: dotnet nuget push extra/AsyncSeq/bin/Release/*.nupkg -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
-      continue-on-error: false
+      - name: Extract version
+        id: version
+        run: |
+          MESSAGE="${{ github.event.head_commit.message }}"
+          VERSION="${MESSAGE#chore: release }"
+          VERSION="${VERSION%% *}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
-    - name: Create Release
-      uses: actions/create-release@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
+      - name: Restore dependencies
+        run: |
+          dotnet tool restore
+          dotnet restore
+
+      - name: Pack NuGet
+        run: just pack-version ${{ steps.version.outputs.version }}
+
+      - name: Push NuGet
+        run: dotnet nuget push 'src/**/Release/*.nupkg' -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
+
+      - name: Push AsyncSeq NuGet
+        run: dotnet nuget push 'extra/**/Release/*.nupkg' -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
+
+      - name: Create GitHub Release
+        run: gh release create ${{ steps.version.outputs.tag }} --title "${{ steps.version.outputs.version }}" --generate-notes || echo "Release already exists"
+        env:
+          GH_TOKEN: ${{ github.token }}
