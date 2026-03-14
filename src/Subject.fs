@@ -1,9 +1,9 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
 open System.Collections.Generic
 open Fable.Actor
 
-open FSharp.Control.Core
+open Fable.Reactive.Core
 
 module internal Subjects =
     type private SingleSubjectMsg<'TSource> =

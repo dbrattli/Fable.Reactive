@@ -1,6 +1,6 @@
 module Tests.Bind
 
-open FSharp.Control
+open Fable.Reactive
 
 open Expecto
 open Tests.Utils

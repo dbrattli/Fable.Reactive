@@ -1,8 +1,8 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
 open System.Collections.Generic
 open Fable.Actor
-open FSharp.Control.Core
+open Fable.Reactive.Core
 
 [<RequireQualifiedAccess>]
 module internal Filter =

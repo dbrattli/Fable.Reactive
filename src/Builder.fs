@@ -1,8 +1,8 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
 open System.Threading
 
-open FSharp.Control.Core
+open Fable.Reactive.Core
 
 type QueryBuilder() =
     member this.Zero() : IAsyncObservable<_> = Create.empty ()

@@ -1,8 +1,8 @@
 module Tests.Switch
 
 open System.Threading.Tasks
-open FSharp.Control.AsyncRx
-open FSharp.Control.AsyncRx.Streams
+open Fable.Reactive.AsyncRx
+open Fable.Reactive.AsyncRx.Streams
 
 open NUnit.Framework
 open FsUnit

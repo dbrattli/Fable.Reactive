@@ -1,8 +1,8 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
 open System
 open Fable.Actor
-open FSharp.Control.Core
+open Fable.Reactive.Core
 
 type AsyncObserver<'T>(fn: Notification<'T> -> Async<unit>) =
 

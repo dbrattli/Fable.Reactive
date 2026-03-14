@@ -1,7 +1,7 @@
 module Tests.TakeUntil
 
-open FSharp.Control
-open FSharp.Control.Subjects
+open Fable.Reactive
+open Fable.Reactive.Subjects
 open Tests.Utils
 
 open Expecto
