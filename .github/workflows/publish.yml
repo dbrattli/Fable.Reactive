@@ -30,6 +30,8 @@ jobs:
           MESSAGE="${{ github.event.head_commit.message }}"
           VERSION="${MESSAGE#chore: release }"
           VERSION="${VERSION%% *}"
+          # Strip package name prefix (e.g. Fable.Reactive@1.0.0-rc.4 -> 1.0.0-rc.4)
+          VERSION="${VERSION##*@}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
