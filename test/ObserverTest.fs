@@ -1,11 +1,11 @@
 module Tests.Observer
 
-open FSharp.Control
-open FSharp.Control.Core
+open Fable.Reactive
+open Fable.Reactive.Core
 
 open Expecto
 open Tests.Utils
-open FSharp.Control.AsyncRx
+open Fable.Reactive.AsyncRx
 open System.Threading
 
 exception MyError of string

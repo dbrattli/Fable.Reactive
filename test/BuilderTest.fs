@@ -2,7 +2,7 @@ module Tests.Query
 
 open System.Threading.Tasks
 
-open FSharp.Control
+open Fable.Reactive
 open Expecto
 
 open Tests.Utils

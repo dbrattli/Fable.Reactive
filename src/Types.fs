@@ -1,4 +1,4 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
 /// FSharp version of IAsyncDisposable. We use a different name to avoid name conflicts.
 type IAsyncRxDisposable =

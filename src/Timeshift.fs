@@ -1,10 +1,10 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
 open System
 open System.Threading
 open Fable.Actor
 
-open FSharp.Control.Core
+open Fable.Reactive.Core
 
 
 [<RequireQualifiedAccess>]

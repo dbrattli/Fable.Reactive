@@ -1,6 +1,6 @@
 module Tests.Map
 
-open FSharp.Control
+open Fable.Reactive
 open Tests.Utils
 
 open Expecto

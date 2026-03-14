@@ -1,6 +1,6 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
-open FSharp.Control.Core
+open Fable.Reactive.Core
 
 [<RequireQualifiedAccess>]
 module internal Tap =

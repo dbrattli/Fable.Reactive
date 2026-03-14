@@ -1,4 +1,4 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
 open Fable.Actor
 

@@ -1,7 +1,8 @@
-namespace FSharp.Control
+namespace Fable.Reactive
 
 open System.Threading
 open FSharp.Control
+open Fable.Reactive
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module AsyncRx =
