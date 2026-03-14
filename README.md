@@ -1,7 +1,6 @@
 # Fable.Reactive
 
-![Build and Test](https://github.com/dbrattli/AsyncRx/workflows/Build%20and%20Test/badge.svg)
-[![codecov](https://codecov.io/gh/dbrattli/AsyncRx/branch/main/graph/badge.svg)](https://codecov.io/gh/dbrattli/AsyncRx)
+![Build and Test](https://github.com/dbrattli/Fable.Reactive/workflows/Build%20and%20Test/badge.svg)
 [![Nuget](https://img.shields.io/nuget/vpre/Fable.Reactive)](https://www.nuget.org/packages/Fable.Reactive/)
 
 > Fable.Reactive is a lightweight Async Reactive library for F#.
@@ -46,7 +45,7 @@ All sub-namespaces and modules have been renamed accordingly:
 
 ## Documentation
 
-Please check out the [documentation](https://fablereaction.readthedocs.io/en/latest/asyncrx/index.html)
+Documentation is currently being updated.
 
 ## Install
 
