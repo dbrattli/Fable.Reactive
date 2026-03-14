@@ -8,20 +8,26 @@ Fable.Reactive is a lightweight Async Reactive library for F# implementing Async
 
 ## Build Commands
 
-```bash
-dotnet restore                    # Restore dependencies
-dotnet build --configuration Release  # Build
-dotnet test                       # Run tests with coverage
-dotnet pack                       # Create NuGet package
-```
-
-## Tools
+Use `just` as the task runner (see `justfile` for all recipes):
 
 ```bash
-dotnet fantomas src/ test/        # Format F# code (max 120 char lines)
+just              # List available recipes
+just build        # Build F# project
+just build-release # Build in Release mode
+just test         # Run all tests
+just format       # Format with Fantomas
+just pack         # Create NuGet package
+just restore      # Restore dependencies and tools
+just shipit       # Run EasyBuild.ShipIt for release management
 ```
 
-Tools are managed via `.config/dotnet-tools.json` (Paket, Fantomas).
+Tools are managed via `.config/dotnet-tools.json` (Paket, Fantomas, EasyBuild.ShipIt).
+
+## Commits
+
+Use [Conventional Commits](https://www.conventionalcommits.org/). PR titles are enforced via CI.
+
+Allowed types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`, `test`, `ci`, `build`, `revert`.
 
 ## Test Framework
 
