@@ -25,6 +25,27 @@ be used both client and server side for full stack software development.
 
 This package was previously named (or known as) FSharp.Control.AsyncRx.
 
+## Upgrading from FSharp.Control.AsyncRx
+
+The namespace has changed from `FSharp.Control` to `Fable.Reactive`. Update
+your open statements:
+
+```diff
+- open FSharp.Control
++ open Fable.Reactive
+```
+
+All sub-namespaces have been renamed accordingly:
+
+| Old | New |
+|-----|-----|
+| `FSharp.Control` | `Fable.Reactive` |
+| `FSharp.Control.Core` | `Fable.Reactive.Core` |
+| `FSharp.Control.AsyncRx` | `Fable.Reactive.AsyncRx` |
+| `FSharp.Control.Subjects` | `Fable.Reactive.Subjects` |
+
+The API itself remains unchanged.
+
 ## Documentation
 
 Please check out the [documentation](https://fablereaction.readthedocs.io/en/latest/asyncrx/index.html)
