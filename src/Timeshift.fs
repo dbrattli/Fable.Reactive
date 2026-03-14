@@ -2,6 +2,7 @@ namespace FSharp.Control
 
 open System
 open System.Threading
+open Fable.Actor
 
 open FSharp.Control.Core
 
@@ -12,33 +13,28 @@ module internal Timeshift =
     /// Time shifts the observable sequence by the given timeout. The
     /// relative time intervals between the values are preserved.
     let delay (msecs: int) (source: IAsyncObservable<'TSource>) : IAsyncObservable<'TSource> =
-        let cts = new CancellationTokenSource()
-
         let subscribeAsync (aobv: IAsyncObserver<'TSource>) =
             let agent =
-                MailboxProcessor.Start(
-                    (fun inbox ->
-                        let rec messageLoop state =
-                            async {
-                                let! n, dueTime = inbox.Receive()
+                spawn (fun inbox ->
+                    let rec messageLoop () =
+                        async {
+                            let! n, dueTime = inbox.Receive()
 
-                                let diff: TimeSpan = dueTime - DateTime.UtcNow
-                                let msecs = Convert.ToInt32 diff.TotalMilliseconds
+                            let diff: TimeSpan = dueTime - DateTime.UtcNow
+                            let msecs = Convert.ToInt32 diff.TotalMilliseconds
 
-                                if msecs > 0 then
-                                    do! Async.Sleep msecs
+                            if msecs > 0 then
+                                do! Async.Sleep msecs
 
-                                match n with
-                                | OnNext x -> do! aobv.OnNextAsync x
-                                | OnError ex -> do! aobv.OnErrorAsync ex
-                                | OnCompleted -> do! aobv.OnCompletedAsync()
+                            match n with
+                            | OnNext x -> do! aobv.OnNextAsync x
+                            | OnError ex -> do! aobv.OnErrorAsync ex
+                            | OnCompleted -> do! aobv.OnCompletedAsync()
 
-                                return! messageLoop state
-                            }
+                            return! messageLoop ()
+                        }
 
-                        messageLoop (0, 0)),
-                    cts.Token
-                )
+                    messageLoop ())
 
             async {
                 let obv n =
@@ -53,10 +49,7 @@ module internal Timeshift =
                 let! subscription = AsyncObserver obv |> source.SubscribeAsync
 
                 let cancel () =
-                    async {
-                        cts.Cancel()
-                        do! subscription.DisposeAsync()
-                    }
+                    async { do! subscription.DisposeAsync() }
 
                 return AsyncDisposable.Create cancel
             }
@@ -70,9 +63,10 @@ module internal Timeshift =
         let subscribeAsync (aobv: IAsyncObserver<'TSource>) =
             let safeObv, autoDetach = autoDetachObserver aobv
             let infinite = Seq.initInfinite id
+            let cts = new CancellationTokenSource()
 
             let agent =
-                MailboxProcessor.Start(fun inbox ->
+                spawn (fun inbox ->
                     let rec messageLoop currentIndex =
                         async {
                             let! n, index = inbox.Receive()
@@ -117,7 +111,7 @@ module internal Timeshift =
                                 agent.Post(n, index)
                             }
 
-                        Async.Start' worker
+                        Async.Start'(worker, cts.Token)
                     }
 
                 let! dispose =
@@ -127,8 +121,8 @@ module internal Timeshift =
 
                 let cancel () =
                     async {
+                        cts.Cancel()
                         do! dispose.DisposeAsync()
-                        agent.Post(OnCompleted, 0)
                     }
 
                 return AsyncDisposable.Create cancel

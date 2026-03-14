@@ -1,5 +1,7 @@
 namespace FSharp.Control
 
+open Fable.Actor
+
 [<RequireQualifiedAccess>]
 module internal Combine =
     type Key = int
@@ -31,7 +33,7 @@ module internal Combine =
                   Key = 0 }
 
             let agent =
-                MailboxProcessor.Start(fun inbox ->
+                spawn (fun inbox ->
                     let obv key =
                         { new IAsyncObserver<'TSource> with
                             member _.OnNextAsync x = safeObv.OnNextAsync x
@@ -147,7 +149,7 @@ module internal Combine =
             let safeObv, autoDetach = autoDetachObserver aobv
 
             let agent =
-                MailboxProcessor.Start(fun inbox ->
+                spawn (fun inbox ->
                     let rec messageLoop (source: option<'TSource>) (other: option<'TOther>) =
                         async {
                             let! cn = inbox.Receive()
@@ -215,7 +217,7 @@ module internal Combine =
             let safeObv, autoDetach = autoDetachObserver aobv
 
             let agent =
-                MailboxProcessor.Start(fun inbox ->
+                spawn (fun inbox ->
                     let rec messageLoop (latest: option<'TOther>) =
                         async {
                             let! cn = inbox.Receive()

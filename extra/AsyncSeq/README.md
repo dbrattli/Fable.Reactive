@@ -8,5 +8,5 @@ Adds to functions:
 ## Install
 
 ```cmd
-dotnet paket add FSharp.Control.AsyncRx.AsyncSeq --project <project>
+dotnet paket add Fable.Reactive.AsyncSeq --project <project>
 ```

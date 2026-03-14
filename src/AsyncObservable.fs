@@ -2,6 +2,7 @@ namespace FSharp.Control
 
 open System
 open System.Threading
+open Fable.Actor
 
 open FSharp.Control.Core
 
@@ -314,7 +315,7 @@ module AsyncRx =
     let subject<'a> () : IAsyncObserver<'a> * IAsyncObservable<'a> = Subjects.subject<'a> ()
 
     /// A mailbox subject is a subscribable mailbox. Each message is broadcasted to all subscribed observers.
-    let mbSubject<'a> () : MailboxProcessor<Notification<'a>> * IAsyncObservable<'a> = Subjects.mbSubject<'a> ()
+    let mbSubject<'a> () : Actor<Notification<'a>> * IAsyncObservable<'a> = Subjects.mbSubject<'a> ()
 
     /// A cold subject that only supports a single subscriber. Will await the caller if no-one is subscribing.
     let singleSubject<'a> () : IAsyncObserver<'a> * IAsyncObservable<'a> = Subjects.singleSubject<'a> ()
