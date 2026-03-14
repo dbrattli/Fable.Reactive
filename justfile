@@ -36,6 +36,7 @@ pack:
 # Create NuGet package with specific version (used in CI)
 pack-version version:
     dotnet pack {{src_path}} -c Release -p:PackageVersion={{version}} -p:InformationalVersion={{version}}
+    dotnet pack extra/AsyncSeq -c Release -p:PackageVersion={{version}} -p:InformationalVersion={{version}}
 
 # Run EasyBuild.ShipIt for release management
 shipit *args:
