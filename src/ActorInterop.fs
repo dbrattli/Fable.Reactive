@@ -24,6 +24,7 @@ module internal ActorInterop =
     /// For each upstream item, posts it to a per-subscription actor.
     /// The actor emits downstream via an emit callback provided at spawn time.
     /// Terminal events bypass the actor and go directly to downstream.
+    /// If the actor crashes, the error is forwarded downstream as OnErrorAsync.
     let flatMapActor
         (handler: ('TResult -> unit) -> Actor<'TSource> -> ActorOp<unit>)
         (source: IAsyncObservable<'TSource>)
@@ -36,7 +37,26 @@ module internal ActorInterop =
                 let emit value =
                     dispatch.OnNextAsync value |> Async.Start'
 
-                let actor = Actor.spawn (handler emit)
+                // Monitor actor: receives ChildExited when the processing actor crashes
+                // and forwards the error downstream.
+                let monitor =
+                    Actor.spawn (fun inbox ->
+                        let rec loop () =
+                            async {
+                                let! msg = inbox.Receive()
+
+                                match Actor.tryAsChildExited msg with
+                                | Some exited ->
+                                    let ex = exited.Reason :?> exn
+                                    do! aobv.OnErrorAsync ex
+                                | None -> ()
+
+                                return! loop ()
+                            }
+
+                        loop ())
+
+                let actor = Actor.spawnLinked monitor (handler emit)
 
                 let obv =
                     { new IAsyncObserver<'TSource> with
@@ -50,7 +70,11 @@ module internal ActorInterop =
                     AsyncDisposable.Composite
                         [ sourceDisp
                           innerDisp
-                          AsyncDisposable.Create(fun () -> async { Actor.kill actor }) ]
+                          AsyncDisposable.Create(fun () ->
+                              async {
+                                  Actor.kill actor
+                                  Actor.kill monitor
+                              }) ]
             }
 
         { new IAsyncObservable<'TResult> with

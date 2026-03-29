@@ -92,6 +92,28 @@ let tests =
               Expect.equal actual [ 10; 30; 60 ] "Should emit running sums"
           }
 
+          testAsync "flatMapActor forwards actor crash as OnError" {
+              let xs = fromNotification [ OnNext 1; OnCompleted ]
+              let error = System.InvalidOperationException("actor crash")
+
+              let crashing =
+                  xs
+                  |> Reactive.flatMapActor (fun _emit _inbox ->
+                      actor { raise error })
+
+              let obv = TestObserver<int>()
+              let! _sub = crashing.SubscribeAsync obv
+              do! Async.Sleep 200
+
+              let hasError =
+                  obv.Notifications
+                  |> Seq.exists (function
+                      | OnError _ -> true
+                      | _ -> false)
+
+              Expect.isTrue hasError "Should forward actor crash as OnError"
+          }
+
           testAsync "ofActor creates observable from actor emissions" {
               let actor, obs =
                   Reactive.ofActor (fun emit _inbox ->
