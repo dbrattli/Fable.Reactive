@@ -5,6 +5,7 @@ open Fable.Actor.Types
 
 open Fable.Reactive.Core
 
+[<RequireQualifiedAccess>]
 module internal ActorInterop =
 
     /// Wraps an Actor<Notification<'T>> as an IAsyncObserver<'T>.
@@ -17,7 +18,7 @@ module internal ActorInterop =
 
     /// Subscribe an observable to an actor that receives Notification<'T>.
     /// Actor lifecycle is caller-managed.
-    let subscribeActor (actor: Actor<Notification<'T>>) (source: IAsyncObservable<'T>) : Async<IAsyncRxDisposable> =
+    let subscribeActor (actor: Actor<Notification<'T>>) (source: IAsyncObservable<'T>) : Async<IReactiveDisposable> =
         source.SubscribeAsync(toObserver actor)
 
     /// For each upstream item, posts it to a per-subscription actor.
@@ -35,7 +36,7 @@ module internal ActorInterop =
                 let emit value =
                     dispatch.OnNextAsync value |> Async.Start'
 
-                let actor = spawn (handler emit)
+                let actor = Actor.spawn (handler emit)
 
                 let obv =
                     { new IAsyncObserver<'TSource> with
@@ -49,7 +50,7 @@ module internal ActorInterop =
                     AsyncDisposable.Composite
                         [ sourceDisp
                           innerDisp
-                          AsyncDisposable.Create(fun () -> async { kill actor }) ]
+                          AsyncDisposable.Create(fun () -> async { Actor.kill actor }) ]
             }
 
         { new IAsyncObservable<'TResult> with
@@ -65,7 +66,7 @@ module internal ActorInterop =
         let subscribeAsync (aobv: IAsyncObserver<'TResult>) =
             async {
                 let actor =
-                    spawn (fun inbox ->
+                    Actor.spawn (fun inbox ->
                         let rec loop state =
                             async {
                                 let! (value, rc: ReplyChannel<'TResult>) = inbox.Receive()
@@ -80,7 +81,7 @@ module internal ActorInterop =
                     { new IAsyncObserver<'TSource> with
                         member _.OnNextAsync x =
                             async {
-                                let! result = call actor x
+                                let! result = Actor.call actor x
                                 do! aobv.OnNextAsync result
                             }
 
@@ -89,25 +90,19 @@ module internal ActorInterop =
 
                 let! disp = source.SubscribeAsync obv
 
-                return AsyncDisposable.Composite [ disp; AsyncDisposable.Create(fun () -> async { kill actor }) ]
+                return AsyncDisposable.Composite [ disp; AsyncDisposable.Create(fun () -> async { Actor.kill actor }) ]
             }
 
         { new IAsyncObservable<'TResult> with
             member _.SubscribeAsync o = subscribeAsync o }
 
-    /// Create an observable from an actor. The actor body receives an emit callback.
-    /// Uses safeObserver since there's no upstream providing Rx grammar guarantees.
-    let ofActor (body: ('T -> unit) -> Actor<'Msg> -> ActorOp<unit>) : IAsyncObservable<'T> =
-        let subscribeAsync (aobv: IAsyncObserver<'T>) =
-            async {
-                let safeObv = safeObserver aobv AsyncDisposable.Empty
+    /// Create an actor-backed subject. The actor body receives an emit callback.
+    /// Returns the actor (for posting messages) and an observable (for subscribing).
+    let ofActor (body: ('T -> unit) -> Actor<'Msg> -> ActorOp<unit>) : Actor<'Msg> * IAsyncObservable<'T> =
+        let dispatch, stream = Subjects.subject<'T> ()
 
-                let emit value =
-                    safeObv.OnNextAsync value |> Async.Start'
+        let emit value =
+            dispatch.OnNextAsync value |> Async.Start'
 
-                let actor = spawn (body emit)
-                return AsyncDisposable.Create(fun () -> async { kill actor })
-            }
-
-        { new IAsyncObservable<'T> with
-            member _.SubscribeAsync o = subscribeAsync o }
+        let actor = Actor.spawn (body emit)
+        actor, stream

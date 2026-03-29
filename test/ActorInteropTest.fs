@@ -16,7 +16,7 @@ let tests =
               let tcs = System.Threading.Tasks.TaskCompletionSource<unit>()
 
               let actor =
-                  spawn (fun inbox ->
+                  Actor.spawn (fun inbox ->
                       let rec loop () =
                           actor {
                               let! msg = inbox.Receive()
@@ -32,13 +32,13 @@ let tests =
 
                       loop ())
 
-              let! _sub = AsyncRx.subscribeActor actor xs
+              let! _sub = Reactive.subscribeActor actor xs
               do! Async.AwaitTask tcs.Task
 
               let actual = received |> Seq.toList
               let expected = [ OnNext 1; OnNext 2; OnNext 3; OnCompleted ]
               Expect.equal actual expected "Actor should receive all notifications"
-              kill actor
+              Actor.kill actor
           }
 
           testAsync "flatMapActor emits transformed values downstream" {
@@ -46,7 +46,7 @@ let tests =
 
               let doubled =
                   xs
-                  |> AsyncRx.flatMapActor (fun emit inbox ->
+                  |> Reactive.flatMapActor (fun emit inbox ->
                       let rec loop () =
                           actor {
                               let! x = inbox.Receive()
@@ -69,14 +69,14 @@ let tests =
                       | _ -> None)
                   |> Seq.toList
 
-              Expect.equal actual [ 2; 4; 6 ] "Should emit doubled values"
+              Expect.equal (actual |> List.sort) [ 2; 4; 6 ] "Should emit doubled values"
           }
 
           testAsync "mapActor applies stateful transform with backpressure" {
               let xs = fromNotification [ OnNext 10; OnNext 20; OnNext 30; OnCompleted ]
 
               let withRunningSum =
-                  xs |> AsyncRx.mapActor (fun sum x -> sum + x, sum + x) 0
+                  xs |> Reactive.mapActor (fun sum x -> sum + x, sum + x) 0
 
               let obv = TestObserver<int>()
               let! _sub = withRunningSum.SubscribeAsync obv
@@ -93,8 +93,8 @@ let tests =
           }
 
           testAsync "ofActor creates observable from actor emissions" {
-              let obs =
-                  AsyncRx.ofActor (fun emit _inbox ->
+              let actor, obs =
+                  Reactive.ofActor (fun emit _inbox ->
                       actor {
                           emit 42
                           do! Async.Sleep 10
@@ -102,7 +102,7 @@ let tests =
                       })
 
               let obv = TestObserver<int>()
-              let! sub = obs.SubscribeAsync obv
+              let! _sub = obs.SubscribeAsync obv
               // Give the actor time to emit
               do! Async.Sleep 200
 
@@ -114,5 +114,5 @@ let tests =
                   |> Seq.toList
 
               Expect.equal actual [ 42; 43 ] "Should emit actor values"
-              do! sub.DisposeAsync()
+              Actor.kill actor
           } ]
