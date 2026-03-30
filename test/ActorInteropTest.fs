@@ -1,6 +1,7 @@
 module Tests.ActorInterop
 
 open Fable.Actor
+open Fable.Actor.Types
 open Fable.Reactive
 
 open Expecto
@@ -90,6 +91,102 @@ let tests =
                   |> Seq.toList
 
               Expect.equal actual [ 10; 30; 60 ] "Should emit running sums"
+          }
+
+          testAsync "flatMapActorSupervised Stop continues stream after crash" {
+              let xs = fromNotification [ OnNext 1; OnNext 2; OnNext 3; OnCompleted ]
+
+              let result =
+                  xs
+                  |> Reactive.flatMapActorSupervised
+                      (fun _ -> Directive.Stop)
+                      (fun emit inbox ->
+                          let rec loop () =
+                              actor {
+                                  let! x = inbox.Receive()
+
+                                  if x = 2 then
+                                      failwith "boom"
+
+                                  emit (x * 10)
+                                  return! loop ()
+                              }
+
+                          loop ())
+
+              let obv = TestObserver<int>()
+              let! _sub = result.SubscribeAsync obv
+              do! obv.AwaitIgnore()
+              do! Async.Sleep 200
+
+              let actual =
+                  obv.Notifications
+                  |> Seq.choose (function
+                      | OnNext x -> Some x
+                      | _ -> None)
+                  |> Seq.toList
+
+              // Item 2 crashes the actor (Stop = actor dies, item lost), item 3 is also lost
+              // because the actor is dead and Stop doesn't restart.
+              Expect.contains actual 10 "Should emit item before crash"
+
+              let hasError =
+                  obv.Notifications
+                  |> Seq.exists (function
+                      | OnError _ -> true
+                      | _ -> false)
+
+              Expect.isFalse hasError "Stop should not forward error downstream"
+          }
+
+          testAsync "flatMapActorSupervised Restart accepts future items after crash" {
+              // Use a slow source so items arrive after restart, not all queued at once.
+              let xs =
+                  Reactive.create (fun obv ->
+                      async {
+                          do! obv.OnNextAsync 1
+                          do! Async.Sleep 50
+                          do! obv.OnNextAsync 2
+                          // Wait for crash + restart before sending item 3
+                          do! Async.Sleep 200
+                          do! obv.OnNextAsync 3
+                          do! obv.OnCompletedAsync()
+                          return AsyncDisposable.Empty
+                      })
+
+              let result =
+                  xs
+                  |> Reactive.flatMapActorSupervised
+                      (fun _ -> Directive.Restart)
+                      (fun emit inbox ->
+                          let rec loop () =
+                              actor {
+                                  let! x = inbox.Receive()
+
+                                  if x = 2 then
+                                      failwith "boom"
+
+                                  emit (x * 10)
+                                  return! loop ()
+                              }
+
+                          loop ())
+
+              let obv = TestObserver<int>()
+              let! _sub = result.SubscribeAsync obv
+              do! obv.AwaitIgnore()
+              do! Async.Sleep 500
+
+              let actual =
+                  obv.Notifications
+                  |> Seq.choose (function
+                      | OnNext x -> Some x
+                      | _ -> None)
+                  |> Seq.toList
+                  |> List.sort
+
+              // Item 1 emits 10, item 2 crashes (lost), actor restarts, item 3 emits 30
+              Expect.equal actual [ 10; 30 ] "Should emit items 1 and 3, skip crashed item 2"
           }
 
           testAsync "flatMapActor forwards actor crash as OnError" {

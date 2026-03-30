@@ -21,11 +21,15 @@ module internal ActorInterop =
     let subscribeActor (actor: Actor<Notification<'T>>) (source: IAsyncObservable<'T>) : Async<IReactiveDisposable> =
         source.SubscribeAsync(toObserver actor)
 
-    /// For each upstream item, posts it to a per-subscription actor.
+    /// For each upstream item, posts it to a supervised per-subscription actor.
     /// The actor emits downstream via an emit callback provided at spawn time.
     /// Terminal events bypass the actor and go directly to downstream.
-    /// If the actor crashes, the error is forwarded downstream as OnErrorAsync.
-    let flatMapActor
+    /// The decider controls crash behavior:
+    ///   Escalate → forward as OnErrorAsync (terminates the stream)
+    ///   Stop     → actor dies, stream continues (crashed item is lost)
+    ///   Restart  → actor is restarted, stream continues (crashed item is lost)
+    let flatMapActorSupervised
+        (decide: exn -> Directive)
         (handler: ('TResult -> unit) -> Actor<'TSource> -> ActorOp<unit>)
         (source: IAsyncObservable<'TSource>)
         : IAsyncObservable<'TResult> =
@@ -37,18 +41,32 @@ module internal ActorInterop =
                 let emit value =
                     dispatch.OnNextAsync value |> Async.Start'
 
-                // Monitor actor: receives ChildExited when the processing actor crashes
-                // and forwards the error downstream.
+                // Shared mutable ref — upstream posts directly to the child actor.
+                // Monitor swaps the ref on Restart.
+                let childRef = ref Unchecked.defaultof<Actor<'TSource>>
+                let ready = System.Threading.Tasks.TaskCompletionSource<unit>()
+
+                // Monitor actor: receives ChildExited and applies the supervision directive.
                 let monitor =
                     Actor.spawn (fun inbox ->
+                        childRef.Value <- Actor.spawnLinked inbox (handler emit)
+                        ready.SetResult()
+
                         let rec loop () =
                             async {
                                 let! msg = inbox.Receive()
 
                                 match Actor.tryAsChildExited msg with
                                 | Some exited ->
-                                    let ex = exited.Reason :?> exn
-                                    do! aobv.OnErrorAsync ex
+                                    let ex =
+                                        match exited.Reason with
+                                        | :? exn as e -> e
+                                        | r -> ProcessExitException(sprintf "%A" r)
+
+                                    match decide ex with
+                                    | Directive.Escalate -> do! aobv.OnErrorAsync ex
+                                    | Directive.Stop -> ()
+                                    | Directive.Restart -> childRef.Value <- Actor.spawnLinked inbox (handler emit)
                                 | None -> ()
 
                                 return! loop ()
@@ -56,11 +74,11 @@ module internal ActorInterop =
 
                         loop ())
 
-                let actor = Actor.spawnLinked monitor (handler emit)
+                do! Async.AwaitTask ready.Task
 
                 let obv =
                     { new IAsyncObserver<'TSource> with
-                        member _.OnNextAsync x = async { actor.Post x }
+                        member _.OnNextAsync x = async { childRef.Value.Post x }
                         member _.OnErrorAsync err = aobv.OnErrorAsync err
                         member _.OnCompletedAsync() = aobv.OnCompletedAsync() }
 
@@ -70,15 +88,21 @@ module internal ActorInterop =
                     AsyncDisposable.Composite
                         [ sourceDisp
                           innerDisp
-                          AsyncDisposable.Create(fun () ->
-                              async {
-                                  Actor.kill actor
-                                  Actor.kill monitor
-                              }) ]
+                          AsyncDisposable.Create(fun () -> async { Actor.kill monitor }) ]
             }
 
         { new IAsyncObservable<'TResult> with
             member _.SubscribeAsync o = subscribeAsync o }
+
+    /// For each upstream item, posts it to a per-subscription actor.
+    /// The actor emits downstream via an emit callback provided at spawn time.
+    /// Terminal events bypass the actor and go directly to downstream.
+    /// If the actor crashes, the error is forwarded downstream as OnErrorAsync.
+    let flatMapActor
+        (handler: ('TResult -> unit) -> Actor<'TSource> -> ActorOp<unit>)
+        (source: IAsyncObservable<'TSource>)
+        : IAsyncObservable<'TResult> =
+        flatMapActorSupervised (fun _ -> Directive.Escalate) handler source
 
     /// Stateful 1-to-1 transform using an actor with request-reply (call).
     /// Provides backpressure — the pipeline waits for the actor's reply before emitting downstream.

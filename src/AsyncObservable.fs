@@ -3,6 +3,7 @@ namespace Fable.Reactive
 open System
 open System.Threading
 open Fable.Actor
+open Fable.Actor.Types
 
 open Fable.Reactive.Core
 
@@ -346,8 +347,17 @@ module Reactive =
     let subscribeActor (actor: Actor<Notification<'a>>) (source: IAsyncObservable<'a>) : Async<IReactiveDisposable> =
         ActorInterop.subscribeActor actor source
 
+    /// For each upstream item, posts it to a supervised per-subscription actor.
+    /// The decider controls crash behavior: Escalate (OnError), Stop (drop), Restart (retry).
+    let flatMapActorSupervised
+        (decide: exn -> Directive)
+        (handler: ('b -> unit) -> Actor<'a> -> ActorOp<unit>)
+        (source: IAsyncObservable<'a>)
+        : IAsyncObservable<'b> =
+        ActorInterop.flatMapActorSupervised decide handler source
+
     /// For each upstream item, posts it to a per-subscription actor.
-    /// The actor emits downstream via an emit callback. Terminal events bypass the actor.
+    /// The actor emits downstream via an emit callback. Actor crash → OnError.
     let flatMapActor
         (handler: ('b -> unit) -> Actor<'a> -> ActorOp<unit>)
         (source: IAsyncObservable<'a>)
